@@ -6,7 +6,7 @@
 | ID | Épico | BC | Tipo | Tamanho | Stories | Tasks (est.) | Dep. | Release |
 | -- | ----- | -- | ---- | ------- | ------- | ------------ | ---- | ------- |
 | EP-000 | Bootstrap e Infra | TECH | Enabler | M | 2 | ~25 | — | R0 |
-| EP-001 | Identity & Access | Auth | Generic | M | 3 | ~45 | EP-000 | R1 |
+| EP-001 | Identity & Access | Auth | Generic | M | 3 | ~55 | EP-000 | R1 |
 | EP-002 | Platform (SaaS) | Platform | Core | M | 3 | ~40 | EP-001 | R1 |
 | EP-003 | Store Settings | Settings | Supporting | P | 2 | ~30 | EP-001 | R1 |
 | EP-004 | CRM | CRM | Supporting | P | 2 | ~36 | EP-001 | R2 |

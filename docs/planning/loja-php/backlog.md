@@ -1,6 +1,8 @@
 # Backlog — RetailOps (Loja PHP)
 
 **Baseado em**:
+- `docs/planning/loja-php/delivery-profile.md` ← **perfil full-stack (obrigatório antes do backlog)**
+- `docs/discovery/ecommerce-legado-php/delivery-inventory.md`
 - `docs/modeling/loja-php/ddd-strategic-model.md`
 - `docs/modeling/loja-php/ddd-tactical-model.md`
 - `docs/discovery/ecommerce-legado-php/requirements.md`
@@ -9,6 +11,8 @@
 **Data**: 2026-05-22  
 **Stack**: **C#** (ASP.NET Core 8 + EF Core) · **Vue 3 + PrimeVue** (web admin) · **Kotlin Android** (PDV mobile)  
 **Total**: 12 épicos (2 técnicos + 10 BCs), 38 stories, ~420 tasks estimadas
+
+> Cada US com Web/Mobile = **Sim** em `delivery-profile.md` deve listar tasks `interface:entity` → `repository` → `page` (Vue) e/ou `interface:mobile-*` (Android) — não apenas API + uma página.
 
 ---
 
@@ -46,6 +50,8 @@
 ## Template — Tasks full-stack por feature
 
 Reutilizar ao final de cada US com frontend/mobile. Substituir `<X>`, `<xs>`, `<Endpoint>`.
+
+> **OpenSpec (`openspec-propose`)**: **nunca** colapsar este template em uma única linha (“Template full-stack”). **Expandir** cada bullet abaixo como task separada com **Agent** + **Prompt**, na ordem inside-out (entity → usecase → repository → page → form → mobile-* → testes). Ver `req-agile-planning` e `openspec-propose`.
 
 ```markdown
 - [ ] `interface:entity` Entidade frontend <X> (~1h)
@@ -87,6 +93,12 @@ Reutilizar ao final de cada US com frontend/mobile. Substituir `<X>`, `<xs>`, `<
 - [ ] `test:e2e` E2E API (~2h)
   - **Agent:** `E2E Tests (C#)`
   - **Prompt:** "WebApplicationFactory: fluxo HTTP principal da US."
+- [ ] `test:unit-web` Vitest use cases/repository Vue (~2h)
+  - **Agent:** `Frontend UseCase (Vue)`
+  - **Prompt:** "Configurar Vitest em apps/web-vue; *.test.ts para use cases e HttpRepository com fetch mock."
+- [ ] `test:unit-mobile` JUnit use case Android (~1h)
+  - **Agent:** `Mobile UseCase (Android)`
+  - **Prompt:** "src/test/java com MockK: testar use case com IRepository mockado (Success/Failure)."
 ```
 
 ---
@@ -189,6 +201,18 @@ Reutilizar ao final de cada US com frontend/mobile. Substituir `<X>`, `<xs>`, `<
 - [ ] Usuário inativo ou trial expirado → 403 com mensagem adequada
 - [ ] Não-admin sem permissões → 403
 - [ ] ACL MD5 legado + re-hash bcrypt no primeiro login
+- [ ] Dado usuário em `/login`, quando credenciais válidas, então redireciona para `/platform` (SAS) ou `/tenant`
+
+### Telas e fluxos (web)
+
+| Rota | Persona | Ação | API |
+|------|---------|------|-----|
+| `/login` | usuário | login | POST `/api/auth/login`, GET `/api/auth/me` |
+| `/platform`, `/tenant` | autenticado | home pós-login | — |
+
+**Navegação**: Pinia só token/sessão; guards no router; sem `fetch` na store.
+
+**Entidades UI**: `AuthUserEntity` → `LoginUseCase` / `RestoreSessionUseCase` → `AuthHttpRepository`
 
 **Tasks**:
 
@@ -213,12 +237,24 @@ Reutilizar ao final de cada US com frontend/mobile. Substituir `<X>`, `<xs>`, `<
 - [ ] `interface:controller` AuthController (~2h)
   - **Agent:** `Backend Controller (C#)`
   - **Prompt:** "POST /api/auth/login, POST /api/auth/register (trial), GET /api/auth/me."
+- [ ] `interface:entity` AuthUser entity Vue (~1h)
+  - **Agent:** `Frontend Entity (Vue)`
+  - **Prompt:** "Em apps/web-vue/src/modules/auth/domain: AuthUser + Result<T>; espelhar /api/auth/me; sem fetch na entidade."
+- [ ] `interface:usecase` LoginUseCase + RestoreSessionUseCase Vue (~2h)
+  - **Agent:** `Frontend UseCase (Vue)`
+  - **Prompt:** "LoginUseCase e RestoreSessionUseCase com Promise<Result<T>>; injetar IAuthRepository."
+- [ ] `interface:repository` AuthHttpRepository Vue (~2h)
+  - **Agent:** `Frontend Repository (Vue)`
+  - **Prompt:** "IAuthRepository + AuthHttpRepository: POST /api/auth/login, GET /api/auth/me; map DTO→AuthUser."
 - [ ] `interface:page` Tela login Vue (~2h)
   - **Agent:** `Frontend Page (Vue)`
-  - **Prompt:** "Página pública login; armazena JWT; redireciona tenant vs SAS por level."
-- [ ] `test:unit` + `test:e2e` Auth (~3h)
+  - **Prompt:** "LoginView chama LoginUseCase (não fetch direto); Pinia só sessão/token; redireciona SAS→/platform, tenant→/tenant."
+- [ ] `test:unit` + `test:e2e` Auth API (~3h)
   - **Agent:** `Unit Tests (C#)` + `E2E Tests (C#)`
   - **Prompt:** "Testes login válido/inválido/trial expirado/sem permissão."
+- [ ] `test:unit-web` Vitest auth Vue (~2h)
+  - **Agent:** `Frontend UseCase (Vue)`
+  - **Prompt:** "Vitest: LoginUseCase e AuthHttpRepository com fetch mock."
 
 ### US-011: RBAC — permissões por usuário
 
@@ -231,16 +267,64 @@ Reutilizar ao final de cada US com frontend/mobile. Substituir `<X>`, `<xs>`, `<
 - [ ] CRUD permissões por usuário
 - [ ] Catálogo `acessos` seed (35 itens legado)
 - [ ] Guard Vue bloqueia rotas por PermissionKey
+- [ ] Dado admin em `/tenant/users`, quando salvar permissões, então lista reflete grants
+
+### Telas e fluxos (web)
+
+| Rota | Persona | Ação | API |
+|------|---------|------|-----|
+| `/tenant/users` | admin (`usuarios`) | listar usuários e editar grants | GET `/api/users`, GET `/api/permissions/catalog`, PUT `/api/users/{id}/permissions` |
+
+**Entidades UI**: `TenantUserEntity` → `ListUsersUseCase`, `AssignPermissionsUseCase` → `UsersPermissionsHttpRepository`
+
+### Telas e fluxos (mobile)
+
+| Tela | Persona | Ação | API |
+|------|---------|------|-----|
+| `ProfileScreen` | operador | ver perfil | GET `/api/auth/me` |
+
+**Navegação**: 401 → limpar JWT (DataStore) + mensagem sessão expirada.
+
+**Entidades UI**: `User` → `GetCurrentUserUseCase` → `IAuthRepository` em `domain/repository`
 
 **Tasks**:
 
 - [ ] `app:usecase` AssignPermissionsUseCase, ListPermissionsQuery (~2h)
   - **Agent:** `Core Use Case (C#)` + `Core Query CQRS (C#)`
+  - **Prompt:** "AssignPermissionsUseCase revoga/atribui grants; ListPermissionsQuery por tenant."
 - [ ] `interface:controller` UsersPermissionsController (~2h)
   - **Agent:** `Backend Controller (C#)`
-- [ ] `interface:page` + `interface:form-web` Gestão usuários/permissões Vue (~4h)
-  - **Agent:** `Frontend Page (Vue)` + `Frontend Form (Vue)`
-- [ ] Aplicar **Template full-stack** para User (Android: tela perfil apenas) (~8h)
+  - **Prompt:** "GET /api/users, PUT /api/users/{id}/permissions, GET /api/permissions/catalog; policy Permission:usuarios."
+- [ ] `interface:entity` TenantUser entity Vue (~1h)
+  - **Agent:** `Frontend Entity (Vue)`
+  - **Prompt:** "TenantUser + PermissionKey em domain; Result na criação/validação."
+- [ ] `interface:usecase` ListUsersUseCase + AssignPermissionsUseCase Vue (~2h)
+  - **Agent:** `Frontend UseCase (Vue)`
+  - **Prompt:** "Use cases consumindo IUsersPermissionsRepository; sem fetch nas views."
+- [ ] `interface:repository` UsersPermissionsHttpRepository Vue (~2h)
+  - **Agent:** `Frontend Repository (Vue)`
+  - **Prompt:** "HTTP GET /api/users, PUT permissions, GET catalog; Bearer do auth store."
+- [ ] `interface:page` Listagem usuários Vue (~2h)
+  - **Agent:** `Frontend Page (Vue)`
+  - **Prompt:** "UsersPermissionsView com DataTable; selecionar usuário; chama use cases."
+- [ ] `interface:form-web` Form atribuição permissões Vue (~2h)
+  - **Agent:** `Frontend Form (Vue)`
+  - **Prompt:** "MultiSelect catálogo + salvar via AssignPermissionsUseCase; route guard permission usuarios."
+- [ ] `interface:mobile-entity` User Android (~1h)
+  - **Agent:** `Mobile Entity (Android)`
+  - **Prompt:** "domain/repository: User Kotlin puro + sealed Result; espelha /api/auth/me."
+- [ ] `interface:mobile-usecase` GetCurrentUserUseCase Android (~1h)
+  - **Agent:** `Mobile UseCase (Android)`
+  - **Prompt:** "GetCurrentUserUseCase suspend; contrato em domain."
+- [ ] `interface:mobile-repository` IAuthRepository + Retrofit Android (~2h)
+  - **Agent:** `Mobile Repository (Android)`
+  - **Prompt:** "IAuthRepository em domain/repository; impl em data; Bearer interceptor; DTO→User."
+- [ ] `interface:mobile` ProfileScreen Compose (~2h)
+  - **Agent:** `Mobile Screen (Android)`
+  - **Prompt:** "ProfileScreen + ViewModel; logout/clear token em 401; DataStore para JWT."
+- [ ] `test:unit-mobile` JUnit GetCurrentUserUseCase (~1h)
+  - **Agent:** `Mobile UseCase (Android)`
+  - **Prompt:** "MockK IAuthRepository; Success e Failure no use case."
 
 ### US-012: Autorização de gerente (PIN caixa)
 

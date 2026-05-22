@@ -90,8 +90,40 @@
 │ Repository Ports:                             │
 │   • IUserRepository                           │
 │   • IPermissionRepository                     │
+│                                               │
+│ Superfícies de entrega:                       │
+│   • API REST: Sim                             │
+│   • Web admin: Sim                            │
+│   • Mobile: Sim                               │
 └──────────────────────────────────────────────┘
 ```
+
+### Apresentação — Web admin
+
+| Rota / tela | Persona | Ação | API | Form? |
+|-------------|---------|------|-----|-------|
+| `/login` | usuário tenant/SAS | autenticar | POST `/api/auth/login` | Sim |
+| `/tenant`, `/platform` | autenticado | dashboard | — | Não |
+| `/tenant/users` | admin com `usuarios` | listar/editar permissões | GET `/api/users`, GET `/api/permissions/catalog`, PUT `/api/users/{id}/permissions` | Sim |
+
+**Navegação**: guard global (token + `/me`); redirect SAS → `/platform`, tenant → `/tenant`; rota `/tenant/users` exige permissão `usuarios`.
+
+**Entidades / use cases UI (Vue)**:
+
+- `AuthUserEntity`, `AuthSessionEntity` → `LoginUseCase`, `RestoreSessionUseCase` → `IAuthRepository`
+- `TenantUserEntity` → `ListUsersUseCase`, `AssignPermissionsUseCase`, `ListPermissionCatalogUseCase` → `IUsersPermissionsRepository`
+
+### Apresentação — Mobile
+
+| Tela | Persona | Ação | API | Form? |
+|------|---------|------|-----|-------|
+| `ProfileScreen` | vendedor/operador | ver perfil | GET `/api/auth/me` | Não |
+
+**Navegação**: tela inicial do app (MVP); 401 limpa token (DataStore) e exibe sessão expirada.
+
+**Entidades / use cases UI (Android)**:
+
+- `User` → `GetCurrentUserUseCase` → `IAuthRepository` (contrato em `domain/repository`)
 
 ---
 
