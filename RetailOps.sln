@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -16,6 +16,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.UnitTests", "apps\backend\tests\RetailOps.UnitTests\RetailOps.UnitTests.csproj", "{00000000-0000-0000-0000-000000000005}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.IntegrationTests", "apps\backend\tests\RetailOps.IntegrationTests\RetailOps.IntegrationTests.csproj", "{00000000-0000-0000-0000-000000000006}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{E8ABECD3-33A5-4C32-A6F0-138C2944FEF4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Identity.Core", "apps\backend\RetailOps.Identity.Core\RetailOps.Identity.Core.csproj", "{C0C73178-C2FF-47F2-8976-B1932D651F8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Identity.Infrastructure", "apps\backend\RetailOps.Identity.Infrastructure\RetailOps.Identity.Infrastructure.csproj", "{2D959C1E-3F23-410B-87AD-2571324437ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,5 +59,18 @@ Global
 		{00000000-0000-0000-0000-000000000006}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{00000000-0000-0000-0000-000000000006}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00000000-0000-0000-0000-000000000006}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0C73178-C2FF-47F2-8976-B1932D651F8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0C73178-C2FF-47F2-8976-B1932D651F8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0C73178-C2FF-47F2-8976-B1932D651F8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0C73178-C2FF-47F2-8976-B1932D651F8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D959C1E-3F23-410B-87AD-2571324437ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D959C1E-3F23-410B-87AD-2571324437ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D959C1E-3F23-410B-87AD-2571324437ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D959C1E-3F23-410B-87AD-2571324437ED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4} = {E8ABECD3-33A5-4C32-A6F0-138C2944FEF4}
+		{C0C73178-C2FF-47F2-8976-B1932D651F8D} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
+		{2D959C1E-3F23-410B-87AD-2571324437ED} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
 	EndGlobalSection
 EndGlobal
