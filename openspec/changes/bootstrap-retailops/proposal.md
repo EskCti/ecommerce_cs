@@ -33,7 +33,7 @@ _(nenhuma — repositório greenfield sem specs OpenSpec prévias)_
 
 ## Impact
 
-- **Código novo**: `src/RetailOps.*`, `tests/`, `apps/web-vue/`, `apps/mobile-android/`
+- **Código novo**: `apps/backend/RetailOps.*`, `apps/backend/tests/`, `apps/web-vue/`, `apps/mobile-android/`
 - **Infra**: `docker-compose.yml`, `docker-compose.prod.yml`, `.github/workflows/`
 - **Config**: `.env.example` estendido com connection strings e flags de migração
 - **Documentação**: alinhado a `docs/planning/loja-php/backlog.md` (EP-000) e `docs/migration/loja-php/`

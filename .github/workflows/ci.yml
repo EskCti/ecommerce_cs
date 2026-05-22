@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Unit tests with coverage
+        run: >
+          dotnet test apps/backend/tests/RetailOps.UnitTests/RetailOps.UnitTests.csproj
+          -c Release
+          --collect:"XPlat Code Coverage"
+          --results-directory ./coverage
+
+      - name: Integration tests
+        run: dotnet test apps/backend/tests/RetailOps.IntegrationTests/RetailOps.IntegrationTests.csproj -c Release --no-build
+        env:
+          ConnectionStrings__DefaultConnection: Host=localhost;Database=test_db;Username=test;Password=test

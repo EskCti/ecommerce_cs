@@ -27,7 +27,7 @@ Estado atual: apenas `docs/`, `.env.example`, submodule de skills — sem soluç
 
 ### 1. Estrutura de solução C#
 
-**Decisão:** `RetailOps.sln` com projetos `RetailOps.Shared.Kernel`, `RetailOps.Core`, `RetailOps.Infrastructure`, `RetailOps.Api`, `RetailOps.UnitTests`, `RetailOps.IntegrationTests`.
+**Decisão:** `RetailOps.sln` na raiz com projetos em `apps/backend/` (`RetailOps.Shared.Kernel`, `RetailOps.Core`, `RetailOps.Infrastructure`, `RetailOps.Api`, testes em `apps/backend/tests/`), alinhado a `skills.config.json` (`backendAppPath: apps/backend`) e ao EP-000 via **Config Project Full-Stack**.
 
 **Alternativas:** projeto único (rejeitado — impede modularização por BC); pastas por BC sem projetos separados ainda (adiado — EP-000 usa camadas horizontais vazias).
 
