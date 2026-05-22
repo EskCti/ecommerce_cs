@@ -2,6 +2,8 @@ package com.retailops.mobile.core.di
 
 import com.retailops.mobile.BuildConfig
 import com.retailops.mobile.core.network.HealthApiService
+import com.retailops.mobile.profile.data.AuthApiService
+import com.retailops.mobile.profile.data.AuthTokenStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,8 +20,14 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
+    fun provideOkHttpClient(tokenStore: AuthTokenStore): OkHttpClient =
         OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder().apply {
+                    tokenStore.bearerToken()?.let { header("Authorization", "Bearer $it") }
+                }.build()
+                chain.proceed(request)
+            }
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
                     level = HttpLoggingInterceptor.Level.BASIC
@@ -40,4 +48,9 @@ object NetworkModule {
     @Singleton
     fun provideHealthApiService(retrofit: Retrofit): HealthApiService =
         retrofit.create(HealthApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAuthApiService(retrofit: Retrofit): AuthApiService =
+        retrofit.create(AuthApiService::class.java)
 }

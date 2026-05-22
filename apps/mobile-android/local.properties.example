@@ -1,2 +1,15 @@
-# Copy to local.properties and adjust SDK path / API URL if needed.
-sdk.dir=/path/to/Android/sdk
+# Copy to local.properties (gitignored) and adjust sdk.dir for your machine.
+#
+# WSL (SDK nativo Linux):
+#   sdk.dir=/home/<user>/Android/Sdk
+#
+# WSL usando SDK do Windows (Android Studio):
+#   sdk.dir=/mnt/c/Users/<user>/AppData/Local/Android/Sdk
+#
+# Ou exporte antes do Gradle:
+#   export ANDROID_HOME=$HOME/Android/Sdk
+#
+# sdkmanager (instalar build-tools/platform) — caminho neste SDK WSL:
+#   $ANDROID_HOME/cmdline-tools/cmdline-tools/bin/sdkmanager "build-tools;34.0.0" "platforms;android-35"
+# Se existir .../cmdline-tools/latest/bin/sdkmanager, use esse em vez do aninhado.
+sdk.dir=/home/eskokado/Android/Sdk
