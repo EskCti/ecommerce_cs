@@ -1,4 +1,5 @@
 using RetailOps.Api.Middleware;
+using RetailOps.Identity.Infrastructure;
 using RetailOps.Infrastructure;
 using RetailOps.Infrastructure.Legacy;
 
@@ -21,6 +22,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddLegacyInfrastructure(builder.Configuration);
+builder.Services.AddIdentityModule(builder.Configuration);
 
 var app = builder.Build();
 
@@ -31,6 +33,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseAuthentication();
 app.UseMiddleware<TenantContextMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
