@@ -6,6 +6,7 @@ node_modules/
 target/
 build/
 .gradle/
+apps/mobile-android/local.properties
 apps/web-vue/dist/
 *.tsbuildinfo
 # .trae/*
