@@ -5,6 +5,8 @@ node_modules/
 *.Identifier
 target/
 build/
+.gradle/
+apps/web-vue/dist/
 # .trae/*
 !.trae/skills/
 GITHUB.md
