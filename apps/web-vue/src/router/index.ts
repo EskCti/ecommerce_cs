@@ -11,6 +11,12 @@ const router = createRouter({
       component: () => import('@/views/LoginView.vue'),
       meta: { public: true },
     },
+    {
+      path: '/register-trial',
+      name: 'register-trial',
+      component: () => import('@/views/TrialRegisterView.vue'),
+      meta: { public: true },
+    },
     ...shellRoutes,
     {
       path: '/platform',
@@ -20,6 +26,12 @@ const router = createRouter({
           path: '',
           name: 'platform',
           component: () => import('@/views/DashboardView.vue'),
+        },
+        {
+          path: 'companies',
+          name: 'platform-companies',
+          component: () => import('@/views/PlatformCompaniesView.vue'),
+          meta: { sasOnly: true },
         },
       ],
     },
@@ -55,6 +67,8 @@ router.beforeEach(async (to) => {
   }
 
   if (!auth.isAuthenticated) return { name: 'login', query: { redirect: to.fullPath } }
+
+  if (to.meta.sasOnly && !auth.isSas) return '/tenant'
 
   const permission = to.meta.permission as string | undefined
   if (permission && !auth.hasPermission(permission)) return '/tenant'
