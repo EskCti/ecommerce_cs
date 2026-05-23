@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RetailOps.Infrastructure.Legacy.Persistence;
+using RetailOps.Shared.Kernel.Domain.Transactions;
 
 namespace RetailOps.Infrastructure.Legacy;
 
@@ -17,6 +18,8 @@ public static class DependencyInjection
 
         services.AddDbContext<LegacySasDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        services.AddScoped<ITransactionManager, LegacyEfTransactionManager>();
 
         return services;
     }
