@@ -26,6 +26,8 @@ dotnet run --project apps/backend/RetailOps.Api
 cd apps/web-vue && npm install && npm run dev
 ```
 
+On first run in Development, the API creates the minimal legacy schema (`usuarios`, `empresas`, etc.) in Postgres automatically. Use **Cadastro trial** at `/register-trial` to create your first tenant admin, then log in with that e-mail.
+
 - API: http://localhost:5000/health  
 - Web: http://localhost:5173  
 
