@@ -63,18 +63,51 @@ Stack a definir no planejamento (`req-agile-planning`). Skills abaixo listam var
 
 ### Mapeamento artefato → skill (por camada)
 
-| Artefato | TS | KT | CS |
-| -------- | -- | -- | -- |
-| Value Object | `core-value-object` | `core-value-object-kt` | `core-value-object-cs` |
-| Entity / Aggregate | `core-entity` | `core-entity-kt` | `core-entity-cs` |
-| Domain Service | `core-domain-service` | `core-domain-service-kt` | `core-domain-service-cs` |
-| Repository | `core-repository` | `core-repository-kt` | `core-repository-cs` |
-| Use Case | `core-use-case` | `core-use-case-kt` | `core-use-case-cs` |
-| DTO | `core-dto` | `core-dto-kt` | `core-dto-cs` |
-| Query CQRS | `core-query-cqrs` | `core-query-cqrs-kt` | `core-query-cqrs-cs` |
-| Persistence | `backend-prisma-data` | `backend-data-kt` | `backend-data-cs` |
-| Controller | `backend-controller` | `backend-controller-kt` | `backend-controller-cs` |
-| Frontend tenant | `frontend-page` + `frontend-form-schema` | — | — |
+| Artefato | TS | KT | CS | Template OpenSpec | Exemplo Prático |
+| -------- | -- | -- | -- | ----------------- | --------------- |
+| Value Object | `core-value-object` | `core-value-object-kt` | `core-value-object-cs` | `domain:vo` | [PasswordVO](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#1-domínio-c---auth) |
+| Entity / Aggregate | `core-entity` | `core-entity-kt` | `core-entity-cs` | `domain:entity` | [UserEntity](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#1-domínio-c---auth) |
+| Domain Service | `core-domain-service` | `core-domain-service-kt` | `core-domain-service-cs` | `domain:service` | [PasswordChangeService](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#1-domínio-c---auth) |
+| Repository | `core-repository` | `core-repository-kt` | `core-repository-cs` | `infra:repository` | [IUserRepository](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#2-aplicação-c---auth) |
+| Use Case | `core-use-case` | `core-use-case-kt` | `core-use-case-cs` | `app:usecase` | [RegisterUserUseCase](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#2-aplicação-c---auth) |
+| DTO | `core-dto` | `core-dto-kt` | `core-dto-cs` | `app:dto` | [RegisterUserRequest](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#2-aplicação-c---auth) |
+| Query CQRS | `core-query-cqrs` | `core-query-cqrs-kt` | `core-query-cqrs-cs` | `app:query` | [FindUsersQuery](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#2-aplicação-c---auth) |
+| Persistence | `backend-prisma-data` | `backend-data-kt` | `backend-data-cs` | `infra:persistence` | [UserEntityTypeConfiguration](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#3-infraestrutura-c---auth) |
+| Controller | `backend-controller` | `backend-controller-kt` | `backend-controller-cs` | `interface:controller` | [AuthController](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#4-apresentação-c---auth) |
+| Frontend tenant | `frontend-page` + `frontend-form-schema` | — | — | `interface:page` | [LoginPage](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md#5-frontend-vue---auth) |
+
+---
+
+## 📋 **Integração com OpenSpec e Templates Padronizados**
+
+### **Template Padronizado para Tasks**
+Para garantir consistência nas tasks OpenSpec, use o [template padronizado](../../.agents/skills/docs/templates/openspec-task-template.yaml) que define:
+
+1. **Estrutura padrão**: prefixo, agent, prompt, specs, dependencies
+2. **Validações automáticas**: ordem Clean Architecture, dependências
+3. **Exemplos por camada**: domain, application, infrastructure, presentation
+
+### **Skill de Validação Automática**
+Use `openspec-validate-dependencies` para validar automaticamente:
+- Ordem inside-out das tasks
+- Dependências entre tasks
+- Mapeamento Agent → Skill correto
+- Conformidade com Clean Architecture
+
+### **Workflow Recomendado**
+```
+1. req-discovery → req-ddd-modeling → req-migration-strategy
+2. delivery-profile → req-agile-planning (backlog.md)
+3. openspec-propose "ep-XXX-nome" (gera tasks.md)
+4. openspec-validate-dependencies "ep-XXX-nome"
+5. openspec-apply-change "ep-XXX-nome"
+6. openspec-archive-change "ep-XXX-nome"
+```
+
+### **Exemplos Práticos por Stack**
+- **C# + Vue + Android**: [Exemplos detalhados](../../.agents/skills/docs/templates/openspec-stack-cs-vue-android-example.md)
+- **TypeScript + Vue + Flutter**: Seguir tutorial principal
+- **Kotlin + Spring Boot**: Referenciar skills `-kt`
 
 ---
 
