@@ -25,6 +25,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Identity.Core", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Identity.Infrastructure", "apps\backend\RetailOps.Identity.Infrastructure\RetailOps.Identity.Infrastructure.csproj", "{2D959C1E-3F23-410B-87AD-2571324437ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Platform.Core", "apps\backend\RetailOps.Platform.Core\RetailOps.Platform.Core.csproj", "{3427DC65-DA9E-4ADC-946D-A4D0D30563E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Platform.Infrastructure", "apps\backend\RetailOps.Platform.Infrastructure\RetailOps.Platform.Infrastructure.csproj", "{43EF82A4-36D5-4E57-A099-81DB4464CF95}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,10 +71,20 @@ Global
 		{2D959C1E-3F23-410B-87AD-2571324437ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D959C1E-3F23-410B-87AD-2571324437ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D959C1E-3F23-410B-87AD-2571324437ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3427DC65-DA9E-4ADC-946D-A4D0D30563E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3427DC65-DA9E-4ADC-946D-A4D0D30563E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3427DC65-DA9E-4ADC-946D-A4D0D30563E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3427DC65-DA9E-4ADC-946D-A4D0D30563E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43EF82A4-36D5-4E57-A099-81DB4464CF95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43EF82A4-36D5-4E57-A099-81DB4464CF95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43EF82A4-36D5-4E57-A099-81DB4464CF95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43EF82A4-36D5-4E57-A099-81DB4464CF95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4} = {E8ABECD3-33A5-4C32-A6F0-138C2944FEF4}
 		{C0C73178-C2FF-47F2-8976-B1932D651F8D} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
 		{2D959C1E-3F23-410B-87AD-2571324437ED} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
+		{3427DC65-DA9E-4ADC-946D-A4D0D30563E0} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
+		{43EF82A4-36D5-4E57-A099-81DB4464CF95} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
 	EndGlobalSection
 EndGlobal

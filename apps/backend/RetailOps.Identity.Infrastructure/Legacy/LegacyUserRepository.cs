@@ -80,6 +80,50 @@ public sealed class LegacyUserRepository(LegacySasDbContext db) : IUserRepositor
         return Result.Success();
     }
 
+    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default)
+    {
+        var normalized = email.Trim().ToLowerInvariant();
+        return await db.Users.AsNoTracking()
+            .AnyAsync(u => u.Email != null && u.Email.ToLower() == normalized, ct);
+    }
+
+    public async Task<Result<(Guid UserId, int LegacyUserId)>> CreateTenantAdminAsync(
+        int tenantId,
+        string name,
+        string email,
+        string passwordHash,
+        CancellationToken ct = default)
+    {
+        if (await ExistsByEmailAsync(email, ct))
+            return Result<(Guid, int)>.Failure("Email already registered.");
+
+        var row = new LegacyUserRow
+        {
+            CompanyId = tenantId,
+            Name = name.Trim(),
+            Email = email.Trim().ToLowerInvariant(),
+            PasswordMd5 = passwordHash,
+            Level = "Administrador",
+            Active = "Sim",
+        };
+
+        db.Users.Add(row);
+        await db.SaveChangesAsync(ct);
+
+        var userId = Guid.Parse($"00000000-0000-0000-0000-{row.Id:D12}");
+        return Result<(Guid, int)>.Success((userId, row.Id));
+    }
+
+    public async Task<Result> DeactivateByTenantAsync(int tenantId, CancellationToken ct = default)
+    {
+        var users = await db.Users.Where(u => u.CompanyId == tenantId).ToListAsync(ct);
+        foreach (var user in users)
+            user.Active = "Não";
+
+        await db.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
     private async Task<User?> MapUserAsync(LegacyUserRow row, CancellationToken ct)
     {
         var perms = await (

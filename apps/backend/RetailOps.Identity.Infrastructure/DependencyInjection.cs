@@ -10,8 +10,10 @@ using RetailOps.Identity.Core.Application.UseCases;
 using RetailOps.Identity.Core.Domain.Services;
 using RetailOps.Identity.Infrastructure.Authorization;
 using RetailOps.Identity.Infrastructure.Legacy;
+using RetailOps.Identity.Infrastructure.Platform;
 using RetailOps.Identity.Infrastructure.Queries;
 using RetailOps.Identity.Infrastructure.Security;
+using RetailOps.Platform.Core.Application.Ports;
 
 namespace RetailOps.Identity.Infrastructure;
 
@@ -31,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<ListUsersByTenantQuery>();
 
         services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationHandler, SasLevelAuthorizationHandler>();
 
         var key = configuration["Jwt:Key"] ?? "RetailOps_Dev_Signing_Key_Change_In_Production_32chars!";
         var issuer = configuration["Jwt:Issuer"] ?? "RetailOps";
@@ -53,7 +56,11 @@ public static class DependencyInjection
             });
 
         services.AddAuthorizationBuilder()
-            .AddPolicy("Permission:usuarios", p => p.Requirements.Add(new PermissionRequirement("usuarios")));
+            .AddPolicy("Permission:usuarios", p => p.Requirements.Add(new PermissionRequirement("usuarios")))
+            .AddPolicy("SasOnly", p => p.Requirements.Add(new SasLevelRequirement()));
+
+        services.AddScoped<IUserProvisioningPort, UserProvisioningAdapter>();
+        services.AddScoped<IUserDeactivationPort, UserDeactivationAdapter>();
 
         return services;
     }
