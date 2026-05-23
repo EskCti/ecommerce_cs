@@ -183,6 +183,6 @@ Referência: `docs/planning/loja-php/backlog.md` · US-010, US-011, US-012
 
 ## 11. Acceptance verification
 
-- [ ] 11.1 Validar US-010: JWT login, 403 cenários, MD5→bcrypt, `/me`, testes API + Vue use cases
-- [ ] 11.2 Validar US-011: CRUD permissões, seed 35 acessos, guards Vue, perfil Android com CA
-- [ ] 11.3 Validar US-012: verify-manager-pin com PIN hasheado
+- [x] 11.1 Validar US-010: JWT login, 403 cenários, MD5→bcrypt, `/me`, testes API + Vue use cases
+- [x] 11.2 Validar US-011: CRUD permissões, seed 35 acessos, guards Vue, perfil Android com CA
+- [x] 11.3 Validar US-012: verify-manager-pin com PIN hasheado

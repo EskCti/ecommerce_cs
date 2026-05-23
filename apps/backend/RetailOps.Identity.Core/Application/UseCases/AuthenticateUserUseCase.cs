@@ -16,10 +16,13 @@ public sealed class AuthenticateUserUseCase(
     {
         var user = await users.FindByEmailOrCpfAsync(input.Login.Trim());
         if (user is null)
-            return Result<AuthTokenOutDto>.Failure("Invalid credentials.");
+            return Result<AuthTokenOutDto>.Failure(AuthErrors.InvalidCredentials);
+
+        if (user.Status == Domain.Enums.ActiveStatus.Inactive)
+            return Result<AuthTokenOutDto>.Failure(AuthErrors.InactiveAccount);
 
         if (!AuthorizationPolicy.CanLogin(user))
-            return Result<AuthTokenOutDto>.Failure("User has no permissions assigned.");
+            return Result<AuthTokenOutDto>.Failure(AuthErrors.MissingPermissions);
 
         var hash = user.PasswordHash.Value;
         var valid = passwordHasher.IsBcryptHash(hash)
@@ -27,7 +30,7 @@ public sealed class AuthenticateUserUseCase(
             : legacyMd5.Verify(input.Password, hash);
 
         if (!valid)
-            return Result<AuthTokenOutDto>.Failure("Invalid credentials.");
+            return Result<AuthTokenOutDto>.Failure(AuthErrors.InvalidCredentials);
 
         if (!passwordHasher.IsBcryptHash(hash))
         {

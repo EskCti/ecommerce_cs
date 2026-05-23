@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RetailOps.Identity.Core.Application;
 using RetailOps.Identity.Core.Application.Dtos;
 using RetailOps.Identity.Core.Application.Ports;
 using RetailOps.Identity.Core.Application.UseCases;
@@ -20,7 +21,12 @@ public sealed class AuthController(
     {
         var result = await authenticate.Execute(request);
         if (result.IsFailure)
+        {
+            if (result.Error is AuthErrors.InactiveAccount or AuthErrors.MissingPermissions or AuthErrors.TrialExpired)
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = result.Error });
+
             return Unauthorized(new { error = result.Error });
+        }
 
         return Ok(result.Value);
     }
