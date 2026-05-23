@@ -2,6 +2,8 @@ using RetailOps.Api.Middleware;
 using RetailOps.Identity.Infrastructure;
 using RetailOps.Infrastructure;
 using RetailOps.Infrastructure.Legacy;
+using RetailOps.Infrastructure.Legacy.Persistence;
+using RetailOps.Platform.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,11 +25,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddLegacyInfrastructure(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddPlatformModule();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    await LegacyDatabaseBootstrap.EnsureDevSchemaAsync(app.Services);
     app.UseSwagger();
     app.UseSwaggerUI();
 }

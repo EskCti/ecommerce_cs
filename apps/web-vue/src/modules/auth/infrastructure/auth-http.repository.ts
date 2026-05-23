@@ -20,8 +20,10 @@ export class AuthHttpRepository implements IAuthRepository {
         body: JSON.stringify({ login: input.login, password: input.password }),
       })
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string }
-        return err(body.error ?? 'Falha no login')
+        const body = (await res.json().catch(() => ({}))) as { error?: string; title?: string }
+        if (body.error) return err(body.error)
+        if (res.status >= 500) return err('Erro interno do servidor. Verifique se a API e o banco estão rodando.')
+        return err(body.title ?? 'Falha no login')
       }
       const data = (await res.json()) as LoginResponseDto
       this.setToken(data.accessToken)

@@ -18,6 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RetailOps.Identity.Core\RetailOps.Identity.Core.csproj" />
+    <ProjectReference Include="..\RetailOps.Platform.Core\RetailOps.Platform.Core.csproj" />
     <ProjectReference Include="..\RetailOps.Infrastructure\RetailOps.Infrastructure.csproj" />
     <ProjectReference Include="..\RetailOps.Infrastructure.Legacy\RetailOps.Infrastructure.Legacy.csproj" />
   </ItemGroup>

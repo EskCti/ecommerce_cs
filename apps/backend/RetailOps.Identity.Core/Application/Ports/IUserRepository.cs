@@ -9,4 +9,12 @@ public interface IUserRepository
     Task<User?> FindByIdAsync(Guid id, CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListByTenantAsync(int tenantId, CancellationToken ct = default);
     Task<Result> SaveAsync(User user, CancellationToken ct = default);
+    Task<bool> ExistsByEmailAsync(string email, CancellationToken ct = default);
+    Task<Result<(Guid UserId, int LegacyUserId)>> CreateTenantAdminAsync(
+        int tenantId,
+        string name,
+        string email,
+        string passwordHash,
+        CancellationToken ct = default);
+    Task<Result> DeactivateByTenantAsync(int tenantId, CancellationToken ct = default);
 }

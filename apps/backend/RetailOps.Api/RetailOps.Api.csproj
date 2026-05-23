@@ -13,6 +13,8 @@
     <ProjectReference Include="..\RetailOps.Infrastructure.Legacy\RetailOps.Infrastructure.Legacy.csproj" />
     <ProjectReference Include="..\RetailOps.Identity.Infrastructure\RetailOps.Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\RetailOps.Identity.Core\RetailOps.Identity.Core.csproj" />
+    <ProjectReference Include="..\RetailOps.Platform.Infrastructure\RetailOps.Platform.Infrastructure.csproj" />
+    <ProjectReference Include="..\RetailOps.Platform.Core\RetailOps.Platform.Core.csproj" />
     <ProjectReference Include="..\RetailOps.Core\RetailOps.Core.csproj" />
   </ItemGroup>
 </Project>
