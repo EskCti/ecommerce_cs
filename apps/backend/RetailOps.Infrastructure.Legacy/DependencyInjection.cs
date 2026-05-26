@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RetailOps.Core.StoreSettings.Application.Ports;
 using RetailOps.Infrastructure.Legacy.Persistence;
 using RetailOps.Shared.Kernel.Domain.Transactions;
 
@@ -20,6 +21,9 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITransactionManager, LegacyEfTransactionManager>();
+
+        // Store Settings Legacy Adapter
+        services.AddScoped<IStoreSettingsLegacyPort, StoreSettingsLegacyAdapter>();
 
         return services;
     }

@@ -17,6 +17,9 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyProductRow> Products => Set<LegacyProductRow>();
     public DbSet<LegacyContractRow> Contracts => Set<LegacyContractRow>();
     public DbSet<LegacyConfigRow> Configs => Set<LegacyConfigRow>();
+    public DbSet<LegacyStoreConfigRow> StoreConfigs => Set<LegacyStoreConfigRow>();
+    public DbSet<LegacyPaymentMethodRow> PaymentMethods => Set<LegacyPaymentMethodRow>();
+    public DbSet<LegacyCashRegisterRow> CashRegisters => Set<LegacyCashRegisterRow>();
     public DbSet<LegacyReceivableRow> Receivables => Set<LegacyReceivableRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -100,6 +103,45 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.TrialDays).HasColumnName("dias_teste");
             entity.Property(e => e.BlockDays).HasColumnName("dias_bloqueio");
             entity.Property(e => e.BlockMessage).HasColumnName("msg_bloqueio");
+        });
+
+        modelBuilder.Entity<LegacyStoreConfigRow>(entity =>
+        {
+            entity.ToTable("config");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.NomeSistema).HasColumnName("nome_sistema").HasMaxLength(100);
+            entity.Property(e => e.Contatos).HasColumnName("contatos").HasMaxLength(200);
+            entity.Property(e => e.CnpjSistema).HasColumnName("cnpj_sistema").HasMaxLength(20);
+            entity.Property(e => e.Endereco).HasColumnName("endereco").HasMaxLength(200);
+            entity.Property(e => e.TipoRel).HasColumnName("tipo_rel").HasMaxLength(10);
+            entity.Property(e => e.TipoDesconto).HasColumnName("tipo_desconto").HasMaxLength(10);
+            entity.Property(e => e.Comissao).HasColumnName("comissao");
+            entity.Property(e => e.Token).HasColumnName("token").HasMaxLength(100);
+            entity.Property(e => e.FotoRel).HasColumnName("foto_rel").HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<LegacyPaymentMethodRow>(entity =>
+        {
+            entity.ToTable("forma_pgtos");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.Nome).HasColumnName("nome").HasMaxLength(50);
+            entity.Property(e => e.Acrescimo).HasColumnName("acrescimo");
+            entity.Property(e => e.Ativo).HasColumnName("ativo").HasMaxLength(3);
+        });
+
+        modelBuilder.Entity<LegacyCashRegisterRow>(entity =>
+        {
+            entity.ToTable("caixas");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.Nome).HasColumnName("nome").HasMaxLength(50);
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(10);
+            entity.Property(e => e.Operador).HasColumnName("operador");
         });
 
         modelBuilder.Entity<LegacyReceivableRow>(entity =>
