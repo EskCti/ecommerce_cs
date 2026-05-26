@@ -88,3 +88,17 @@ Autorização: permissões legado mapeadas (`clientes.*`, `fornecedores.*`).
 
 - CPF obrigatório em todo cliente? **Sim, alinhado legado PDV fiado**
 - Supplier CNPJ validation strict? **Usar TaxDocument VO shared**
+
+## CustomerId contract (EP-006 Sales)
+
+Contrato de integração para o BC Sales referenciar clientes sem acoplar ao agregado CRM.
+
+| Campo | Tipo | Regras |
+| ----- | ---- | ------ |
+| `CustomerId` | `Guid` (VO `RetailOps.Core.Crm.Domain.ValueObjects.CustomerId`) | Não vazio; estável após criação |
+| Legacy mapping | segmento `0006` | `00000000-0000-0000-0006-{legacyId:D12}` |
+| Escopo | tenant | Sales persiste apenas o id; validação de tenant na sessão PDV |
+| Resolução PDV | `FindOrCreateByCpfUseCase` ou `POST /api/crm/customers/find-or-create-by-cpf` | Idempotente por `(tenantId, cpf)` |
+| Eventos | `CustomerRegistered`, `CustomerFoundByCpf` | Sales pode reagir via application port (fase EP-006) |
+
+**Sales BC:** guardar `CustomerId` em `Sale`/`Receivable`; não duplicar nome/CPF. Para exibição, usar query read model ou `GET /api/crm/customers/{id}`.

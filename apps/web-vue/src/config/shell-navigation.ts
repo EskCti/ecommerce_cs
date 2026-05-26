@@ -49,6 +49,18 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
         to: '/tenant/settings/cash-registers',
         match: 'prefix',
       },
+      {
+        id: 'tenant-crm-customers',
+        label: 'Clientes',
+        to: '/tenant/crm/customers',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-crm-suppliers',
+        label: 'Fornecedores',
+        to: '/tenant/crm/suppliers',
+        match: 'prefix',
+      },
     ],
   },
 ]
