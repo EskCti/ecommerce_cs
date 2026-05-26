@@ -1,14 +1,15 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using RetailOps.IntegrationTests.Support;
 using Xunit;
 
 namespace RetailOps.IntegrationTests.Api;
 
-public class MigrationStatusEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class MigrationStatusEndpointTests : IClassFixture<RetailOpsWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public MigrationStatusEndpointTests(WebApplicationFactory<Program> factory)
+    public MigrationStatusEndpointTests(RetailOpsWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
