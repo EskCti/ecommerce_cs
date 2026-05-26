@@ -68,6 +68,18 @@ const router = createRouter({
           component: () => import('@/views/CashRegistersView.vue'),
           meta: { permission: 'configuracoes' },
         },
+        {
+          path: 'crm/customers',
+          name: 'tenant-crm-customers',
+          component: () => import('@/views/CustomersView.vue'),
+          meta: { permission: 'clientes' },
+        },
+        {
+          path: 'crm/suppliers',
+          name: 'tenant-crm-suppliers',
+          component: () => import('@/views/SuppliersView.vue'),
+          meta: { permission: 'fornecedores' },
+        },
       ],
     },
   ],
