@@ -24,6 +24,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddLegacyInfrastructure(builder.Configuration);
+builder.Services.AddStoreSettingsModule();
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddPlatformModule();
 
