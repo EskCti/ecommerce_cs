@@ -109,3 +109,39 @@ public sealed class LegacyReceivableRow
     public DateTime DueDate { get; set; }
     public string Paid { get; set; } = "Não";
 }
+
+public sealed class LegacyCustomerRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string? Nome { get; set; }
+    public string? Cpf { get; set; }
+    public string? Telefone { get; set; }
+    public string? Email { get; set; }
+    public string? Endereco { get; set; }
+    public string? Ativo { get; set; }
+}
+
+public sealed class LegacySupplierRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string? Nome { get; set; }
+    public string? Pessoa { get; set; }
+    public string? Cpf { get; set; }
+    public string? Telefone { get; set; }
+    public string? Email { get; set; }
+    public string? Endereco { get; set; }
+    public string? Ativo { get; set; }
+}
+
+public sealed class LegacyAttachmentRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string? Tipo { get; set; }
+    public int IdRef { get; set; }
+    public string? Nome { get; set; }
+    public string? Foto { get; set; }
+    public DateTime? DataValidade { get; set; }
+}

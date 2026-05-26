@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RetailOps.Core.Crm.Application.Ports;
 using RetailOps.Core.StoreSettings.Application.Ports;
 using RetailOps.Infrastructure.Legacy.Persistence;
 using RetailOps.Shared.Kernel.Domain.Transactions;
@@ -24,6 +25,9 @@ public static class DependencyInjection
 
         // Store Settings Legacy Adapter
         services.AddScoped<IStoreSettingsLegacyPort, StoreSettingsLegacyAdapter>();
+
+        // CRM Legacy Adapter
+        services.AddScoped<ICrmLegacyPort, CrmLegacyAdapter>();
 
         return services;
     }
