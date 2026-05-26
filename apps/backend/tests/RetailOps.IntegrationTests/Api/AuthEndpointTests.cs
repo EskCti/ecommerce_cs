@@ -12,6 +12,7 @@ using RetailOps.Identity.Core.Domain.Enums;
 using RetailOps.Identity.Core.Domain.ValueObjects;
 using RetailOps.Identity.Infrastructure.Seeds;
 using RetailOps.Shared.Kernel.Domain.ValueObjects;
+using RetailOps.IntegrationTests.Support;
 using Xunit;
 
 namespace RetailOps.IntegrationTests.Api;
@@ -189,7 +190,7 @@ public class UsersPermissionsEndpointTests : IClassFixture<AuthWebApplicationFac
     }
 }
 
-public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
+public class AuthWebApplicationFactory : RetailOpsWebApplicationFactory
 {
     public static readonly Guid AdminUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
     public static readonly Guid ManagerUserId = Guid.Parse("00000000-0000-0000-0000-000000000002");
@@ -296,6 +297,7 @@ public sealed class AuthWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
+        base.ConfigureWebHost(builder);
         builder.ConfigureServices(services =>
         {
             var repo = new Mock<IUserRepository>();

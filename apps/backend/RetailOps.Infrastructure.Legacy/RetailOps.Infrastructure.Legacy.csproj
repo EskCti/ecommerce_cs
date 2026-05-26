@@ -13,5 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RetailOps.Shared.Kernel\RetailOps.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\RetailOps.Core\RetailOps.Core.csproj" />
   </ItemGroup>
 </Project>

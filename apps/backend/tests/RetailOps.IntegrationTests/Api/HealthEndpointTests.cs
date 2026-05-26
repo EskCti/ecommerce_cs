@@ -1,15 +1,16 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using RetailOps.IntegrationTests.Support;
 using Xunit;
 
 namespace RetailOps.IntegrationTests.Api;
 
-public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointTests : IClassFixture<RetailOpsWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public HealthEndpointTests(WebApplicationFactory<Program> factory)
+    public HealthEndpointTests(RetailOpsWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }

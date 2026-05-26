@@ -67,6 +67,39 @@ public sealed class LegacyConfigRow
     public string? BlockMessage { get; set; }
 }
 
+public sealed class LegacyStoreConfigRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string? NomeSistema { get; set; }
+    public string? Contatos { get; set; }
+    public string? CnpjSistema { get; set; }
+    public string? Endereco { get; set; }
+    public string? TipoRel { get; set; }
+    public string? TipoDesconto { get; set; }
+    public decimal? Comissao { get; set; }
+    public string? Token { get; set; }
+    public string? FotoRel { get; set; }
+}
+
+public sealed class LegacyPaymentMethodRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string? Nome { get; set; }
+    public decimal? Acrescimo { get; set; }
+    public string? Ativo { get; set; }
+}
+
+public sealed class LegacyCashRegisterRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string? Nome { get; set; }
+    public string? Status { get; set; }
+    public int? Operador { get; set; }
+}
+
 public sealed class LegacyReceivableRow
 {
     public int Id { get; set; }

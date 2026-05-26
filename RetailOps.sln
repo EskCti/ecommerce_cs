@@ -29,6 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Platform.Core", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RetailOps.Platform.Infrastructure", "apps\backend\RetailOps.Platform.Infrastructure\RetailOps.Platform.Infrastructure.csproj", "{43EF82A4-36D5-4E57-A099-81DB4464CF95}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps/backend/RetailOps.Core", "apps\backend\RetailOps.Core", "{E748AAD9-4E98-4167-9F66-2A530F2B0CFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps/backend/RetailOps.Infrastructure", "apps\backend\RetailOps.Infrastructure", "{2510B680-5C12-4F22-AF0A-007824603AAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,5 +90,7 @@ Global
 		{2D959C1E-3F23-410B-87AD-2571324437ED} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
 		{3427DC65-DA9E-4ADC-946D-A4D0D30563E0} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
 		{43EF82A4-36D5-4E57-A099-81DB4464CF95} = {BF0DC6A2-4402-4FA8-83F9-70C9E2180BB4}
+		{00000000-0000-0000-0000-000000000002} = {E748AAD9-4E98-4167-9F66-2A530F2B0CFE}
+		{00000000-0000-0000-0000-000000000003} = {2510B680-5C12-4F22-AF0A-007824603AAF}
 	EndGlobalSection
 EndGlobal

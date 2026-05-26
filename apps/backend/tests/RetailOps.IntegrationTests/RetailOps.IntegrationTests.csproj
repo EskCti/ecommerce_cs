@@ -18,5 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\RetailOps.Api\RetailOps.Api.csproj" />
+    <ProjectReference Include="..\..\RetailOps.Core\RetailOps.Core.csproj" />
+    <ProjectReference Include="..\..\RetailOps.Identity.Core\RetailOps.Identity.Core.csproj" />
   </ItemGroup>
 </Project>

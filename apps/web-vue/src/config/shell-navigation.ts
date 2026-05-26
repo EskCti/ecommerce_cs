@@ -32,9 +32,21 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
     label: 'Módulos',
     items: [
       {
-        id: 'example',
-        label: 'Examples',
-        to: '/example',
+        id: 'tenant-settings-store',
+        label: 'Configuração da loja',
+        to: '/tenant/settings/store',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-settings-payment-methods',
+        label: 'Formas de pagamento',
+        to: '/tenant/settings/payment-methods',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-settings-cash-registers',
+        label: 'Caixas físicos',
+        to: '/tenant/settings/cash-registers',
         match: 'prefix',
       },
     ],
