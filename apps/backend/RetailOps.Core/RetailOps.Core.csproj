@@ -8,4 +8,9 @@
   <ItemGroup>
     <ProjectReference Include="..\RetailOps.Shared.Kernel\RetailOps.Shared.Kernel.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="RetailOps.Infrastructure.Legacy" />
+    <InternalsVisibleTo Include="RetailOps.UnitTests" />
+    <InternalsVisibleTo Include="RetailOps.IntegrationTests" />
+  </ItemGroup>
 </Project>
