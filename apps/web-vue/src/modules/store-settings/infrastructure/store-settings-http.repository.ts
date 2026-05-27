@@ -1,3 +1,4 @@
+import { parseApiError } from '@/shared/parse-api-error'
 import { err, ok, type Result } from '@/shared/result'
 import { StoreConfigEntity } from '../domain/store-config.entity'
 import { PaymentMethodEntity } from '../domain/payment-method.entity'
@@ -9,15 +10,6 @@ import type {
 } from '../application/store-settings.repository'
 
 type TokenProvider = () => string | null
-
-async function parseError(res: Response, fallback: string): Promise<string> {
-  try {
-    const body = (await res.json()) as { error?: string }
-    return body.error ?? fallback
-  } catch {
-    return fallback
-  }
-}
 
 export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
   constructor(private readonly getToken: TokenProvider) {}
@@ -33,7 +25,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
   async getStoreConfig(): Promise<Result<StoreConfigEntity>> {
     try {
       const res = await fetch('/api/settings/store-config', { headers: this.headers() })
-      if (!res.ok) return err(await parseError(res, 'Falha ao carregar configuração da loja'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao carregar configuração da loja'))
       return StoreConfigEntity.fromApiResponse(await res.json())
     } catch {
       return err('Erro de rede')
@@ -47,7 +39,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         headers: this.headers(),
         body: JSON.stringify(config.toApiRequest()),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao salvar configuração da loja'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao salvar configuração da loja'))
       return StoreConfigEntity.fromApiResponse(await res.json())
     } catch {
       return err('Erro de rede')
@@ -57,7 +49,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
   async listPaymentMethods(): Promise<Result<PaymentMethodEntity[]>> {
     try {
       const res = await fetch('/api/settings/payment-methods', { headers: this.headers() })
-      if (!res.ok) return err(await parseError(res, 'Falha ao listar formas de pagamento'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao listar formas de pagamento'))
       const data = (await res.json()) as Array<{
         id: string
         name: string
@@ -84,7 +76,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao criar forma de pagamento'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao criar forma de pagamento'))
       return PaymentMethodEntity.fromApi(await res.json())
     } catch {
       return err('Erro de rede')
@@ -101,7 +93,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao atualizar forma de pagamento'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao atualizar forma de pagamento'))
       return PaymentMethodEntity.fromApi(await res.json())
     } catch {
       return err('Erro de rede')
@@ -114,7 +106,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         method: 'DELETE',
         headers: this.headers(),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao excluir forma de pagamento'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao excluir forma de pagamento'))
       return ok(undefined)
     } catch {
       return err('Erro de rede')
@@ -124,7 +116,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
   async listCashRegisters(): Promise<Result<CashRegisterTerminalEntity[]>> {
     try {
       const res = await fetch('/api/settings/cash-registers', { headers: this.headers() })
-      if (!res.ok) return err(await parseError(res, 'Falha ao listar caixas'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao listar caixas'))
       const data = (await res.json()) as Array<{
         id: string
         name: string
@@ -152,7 +144,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao criar caixa'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao criar caixa'))
       return CashRegisterTerminalEntity.fromApi(await res.json())
     } catch {
       return err('Erro de rede')
@@ -169,7 +161,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao atualizar caixa'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao atualizar caixa'))
       return CashRegisterTerminalEntity.fromApi(await res.json())
     } catch {
       return err('Erro de rede')
@@ -182,7 +174,7 @@ export class StoreSettingsHttpRepository implements IStoreSettingsRepository {
         method: 'DELETE',
         headers: this.headers(),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao excluir caixa'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao excluir caixa'))
       return ok(undefined)
     } catch {
       return err('Erro de rede')
