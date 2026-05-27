@@ -61,6 +61,30 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
         to: '/tenant/crm/suppliers',
         match: 'prefix',
       },
+      {
+        id: 'tenant-catalog-products',
+        label: 'Produtos',
+        to: '/tenant/catalog/products',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-catalog-categories',
+        label: 'Categorias',
+        to: '/tenant/catalog/categories',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-catalog-low-stock',
+        label: 'Estoque baixo',
+        to: '/tenant/catalog/inventory/low-stock',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-catalog-stock-movements',
+        label: 'Movimentação estoque',
+        to: '/tenant/catalog/stock/movements',
+        match: 'prefix',
+      },
     ],
   },
 ]
