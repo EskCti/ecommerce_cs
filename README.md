@@ -19,23 +19,53 @@ Reimplementação do PDV SaaS legado (PHP `sas`) em Clean Architecture: **ASP.NE
 
 ## Desenvolvimento local
 
+### Opção A — Docker Compose (stack completa)
+
 ```bash
 cp .env.example .env
-docker compose up -d
+docker compose up -d --build
+```
+
+- API: http://localhost:5000/health  
+- Web: http://localhost:5173 (proxy `/api` → API no container)
+
+On first run in Development, the API creates the minimal legacy schema in Postgres automatically. Use **Cadastro trial** at `/register-trial` to create your first tenant admin, then log in with that e-mail.
+
+### Opção B — Processos locais (hot reload)
+
+```bash
+cp .env.example .env
+docker compose up -d db          # só Postgres
 dotnet run --project apps/backend/RetailOps.Api
 cd apps/web-vue && npm install && npm run dev
 ```
 
-On first run in Development, the API creates the minimal legacy schema (`usuarios`, `empresas`, etc.) in Postgres automatically. Use **Cadastro trial** at `/register-trial` to create your first tenant admin, then log in with that e-mail.
-
 - API: http://localhost:5000/health  
 - Web: http://localhost:5173  
+
+### Produção (local)
+
+```bash
+cp .env.example .env   # defina Jwt__Secret
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+- Web + API: http://localhost:8080 (nginx faz proxy de `/api` para a API)
 
 ## Testes
 
 ```bash
 dotnet test
+cd apps/web-vue && npm run test:unit
+cd apps/mobile-android && ./gradlew assembleDebug
 ```
+
+## CI/CD
+
+| Workflow | Escopo |
+| -------- | ------ |
+| `ci.yml` | Backend (`dotnet test`), Vue (`build` + `vitest`), Android (`assembleDebug`), smoke `docker build` API + Web |
+| `cd.yml` | Push imagens `retailops-api` e `retailops-web` para GHCR; artefato APK Android |
 
 ## OpenSpec
 

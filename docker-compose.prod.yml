@@ -7,18 +7,36 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-sas_vendas}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build:
       context: .
       dockerfile: apps/backend/RetailOps.Api/Dockerfile
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       ConnectionStrings__DefaultConnection: Host=postgres;Database=${POSTGRES_DB:-sas_vendas};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
       ASPNETCORE_ENVIRONMENT: Production
+      Jwt__Secret: ${Jwt__Secret:?Jwt__Secret is required}
+      Jwt__Issuer: ${Jwt__Issuer:-SasVendas}
+      Jwt__Audience: ${Jwt__Audience:-SasVendas.Users}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web-vue/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
