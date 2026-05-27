@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RetailOps.Core.Crm.Application.Ports;
+using RetailOps.Core.Catalog.Application.Ports;
 using RetailOps.Core.StoreSettings.Application.Ports;
 using RetailOps.Infrastructure.Legacy.Persistence;
 using RetailOps.Shared.Kernel.Domain.Transactions;
@@ -28,6 +29,10 @@ public static class DependencyInjection
 
         // CRM Legacy Adapter
         services.AddScoped<ICrmLegacyPort, CrmLegacyAdapter>();
+
+        // Catalog Legacy Adapter
+        services.AddScoped<ICatalogLegacyPort, CatalogLegacyAdapter>();
+        services.AddScoped<IStockLegacyPort, StockLegacyAdapter>();
 
         return services;
     }
