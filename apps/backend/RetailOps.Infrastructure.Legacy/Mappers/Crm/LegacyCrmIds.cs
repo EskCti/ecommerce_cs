@@ -14,7 +14,7 @@ internal static class LegacyCrmIds
     internal static int? ParseLegacyId(Guid id, string segment)
     {
         var parts = id.ToString().Split('-');
-        if (parts.Length != 5 || parts[2] != segment)
+        if (parts.Length != 5 || parts[3] != segment)
             return null;
 
         return int.TryParse(parts[4], out var legacyId) ? legacyId : null;

@@ -20,13 +20,25 @@ public sealed class CreateSupplierUseCase(ISupplierRepository supplierRepository
         if (tenantIdResult.IsFailure)
             return Result<SupplierOutputDto>.Failure(tenantIdResult.Error);
 
+        var validationErrors = new List<string>();
+
         var nameResult = PersonName.Create(input.Name);
         if (nameResult.IsFailure)
-            return Result<SupplierOutputDto>.Failure(nameResult.Error);
+            validationErrors.Add(nameResult.Error);
 
         var taxDocumentResult = TaxDocument.Create(input.TaxDocument, input.PersonType);
         if (taxDocumentResult.IsFailure)
-            return Result<SupplierOutputDto>.Failure(taxDocumentResult.Error);
+            validationErrors.Add(taxDocumentResult.Error);
+
+        var contactResult = CreateCustomerUseCase.BuildOptionalContact(input.Email, input.Phone, input.Address);
+        if (contactResult.IsFailure)
+            validationErrors.Add(contactResult.Error);
+
+        if (validationErrors.Count > 0)
+            return Result<SupplierOutputDto>.Failure(string.Join(" • ", validationErrors));
+
+        if (nameResult.IsFailure || taxDocumentResult.IsFailure || contactResult.IsFailure)
+            return Result<SupplierOutputDto>.Failure("Validation failed.");
 
         var existsResult = await supplierRepository.TaxDocumentExists(
             tenantIdResult.Value,
@@ -37,10 +49,6 @@ public sealed class CreateSupplierUseCase(ISupplierRepository supplierRepository
         if (existsResult.Value)
             return Result<SupplierOutputDto>.Failure(
                 $"Tax document '{input.TaxDocument}' is already registered for this tenant.");
-
-        var contactResult = CreateCustomerUseCase.BuildOptionalContact(input.Email, input.Phone, input.Address);
-        if (contactResult.IsFailure)
-            return Result<SupplierOutputDto>.Failure(contactResult.Error);
 
         var (email, phone, address) = contactResult.Value;
 
