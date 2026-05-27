@@ -1,3 +1,4 @@
+import { parseApiError } from '@/shared/parse-api-error'
 import { err, ok, type Result } from '@/shared/result'
 import { SupplierEntity, type PersonType } from '../domain/supplier.entity'
 import type {
@@ -22,15 +23,6 @@ type SupplierDto = {
   updatedAt: string
 }
 
-async function parseError(res: Response, fallback: string): Promise<string> {
-  try {
-    const body = (await res.json()) as { error?: string; title?: string }
-    return body.error ?? body.title ?? fallback
-  } catch {
-    return fallback
-  }
-}
-
 export class SupplierHttpRepository implements ISupplierRepository {
   constructor(private readonly getToken: TokenProvider) {}
 
@@ -51,14 +43,18 @@ export class SupplierHttpRepository implements ISupplierRepository {
 
     try {
       const res = await fetch(`/api/crm/suppliers?${params}`, { headers: this.headers() })
-      if (!res.ok) return err(await parseError(res, 'Falha ao listar fornecedores'))
-      const body = (await res.json()) as { items: SupplierDto[]; total: number }
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao listar fornecedores'))
+      const body = await res.json()
+      const rows = Array.isArray(body) ? body : (body as { items?: SupplierDto[] }).items ?? []
+      const totalCount = Array.isArray(body)
+        ? body.length
+        : ((body as { total?: number }).total ?? rows.length)
       const items: SupplierEntity[] = []
-      for (const row of body.items) {
+      for (const row of rows) {
         const mapped = SupplierEntity.fromApi(row)
         if (mapped.ok) items.push(mapped.data)
       }
-      return ok({ items, total: body.total })
+      return ok({ items, total: totalCount })
     } catch {
       return err('Erro de rede')
     }
@@ -71,7 +67,7 @@ export class SupplierHttpRepository implements ISupplierRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao criar fornecedor'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao criar fornecedor'))
       return SupplierEntity.fromApi((await res.json()) as SupplierDto)
     } catch {
       return err('Erro de rede')
@@ -85,7 +81,7 @@ export class SupplierHttpRepository implements ISupplierRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao atualizar fornecedor'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao atualizar fornecedor'))
       return SupplierEntity.fromApi((await res.json()) as SupplierDto)
     } catch {
       return err('Erro de rede')
@@ -98,7 +94,7 @@ export class SupplierHttpRepository implements ISupplierRepository {
         method: 'DELETE',
         headers: this.headers(),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao desativar fornecedor'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao desativar fornecedor'))
       return ok(undefined)
     } catch {
       return err('Erro de rede')

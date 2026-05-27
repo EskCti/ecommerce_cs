@@ -48,6 +48,75 @@ public sealed class LegacyProductRow
     public int CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public int Stock { get; set; }
+    public decimal SalePrice { get; set; }
+    public decimal CostPrice { get; set; }
+    public decimal ProfitMargin { get; set; }
+    public int? SupplierLegacyId { get; set; }
+    public int? CategoryLegacyId { get; set; }
+    public int StockAlertLevel { get; set; }
+    public string? Active { get; set; }
+    public string? Photo { get; set; }
+}
+
+public sealed class LegacyCategoryRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Active { get; set; }
+}
+
+public sealed class LegacyGradeDimensionRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int ProductLegacyId { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public sealed class LegacyGradeOptionRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int DimensionLegacyId { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public int Stock { get; set; }
+}
+
+public sealed class LegacyStockEntryRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int ProductLegacyId { get; set; }
+    public int Quantity { get; set; }
+    public string? Reason { get; set; }
+    public int UserId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? MovementType { get; set; }
+}
+
+public sealed class LegacyStockExitRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int ProductLegacyId { get; set; }
+    public int Quantity { get; set; }
+    public string? Reason { get; set; }
+    public int UserId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? MovementType { get; set; }
+}
+
+public sealed class LegacyGradeMovementDetailRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string MovementType { get; set; } = string.Empty;
+    public int MovementLegacyId { get; set; }
+    public int OptionLegacyId { get; set; }
+    public int Quantity { get; set; }
 }
 
 public sealed class LegacyContractRow
@@ -65,12 +134,6 @@ public sealed class LegacyConfigRow
     public int? TrialDays { get; set; }
     public int? BlockDays { get; set; }
     public string? BlockMessage { get; set; }
-}
-
-public sealed class LegacyStoreConfigRow
-{
-    public int Id { get; set; }
-    public int CompanyId { get; set; }
     public string? NomeSistema { get; set; }
     public string? Contatos { get; set; }
     public string? CnpjSistema { get; set; }

@@ -8,7 +8,7 @@ namespace RetailOps.Infrastructure.Legacy.Mappers.StoreSettings;
 
 public static class LegacyStoreConfigMapper
 {
-    public static Result<StoreConfig> ToDomain(LegacyStoreConfigRow row)
+    public static Result<StoreConfig> ToDomain(LegacyConfigRow row)
     {
         try
         {
@@ -82,11 +82,11 @@ public static class LegacyStoreConfigMapper
         }
     }
 
-    public static Result<LegacyStoreConfigRow> ToLegacy(StoreConfig storeConfig)
+    public static Result<LegacyConfigRow> ToLegacy(StoreConfig storeConfig)
     {
         try
         {
-            var row = new LegacyStoreConfigRow
+            var row = new LegacyConfigRow
             {
                 CompanyId = storeConfig.TenantId.Value,
                 NomeSistema = storeConfig.Name?.Value,
@@ -100,11 +100,11 @@ public static class LegacyStoreConfigMapper
                 FotoRel = storeConfig.LogoPath?.Value
             };
 
-            return Result<LegacyStoreConfigRow>.Success(row);
+            return Result<LegacyConfigRow>.Success(row);
         }
         catch (Exception ex)
         {
-            return Result<LegacyStoreConfigRow>.Failure($"Failed to map StoreConfig to legacy: {ex.Message}");
+            return Result<LegacyConfigRow>.Failure($"Failed to map StoreConfig to legacy: {ex.Message}");
         }
     }
 }

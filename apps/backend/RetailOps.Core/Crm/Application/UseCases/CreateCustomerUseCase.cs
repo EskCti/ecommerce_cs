@@ -22,13 +22,25 @@ public sealed class CreateCustomerUseCase(
         if (tenantIdResult.IsFailure)
             return Result<CustomerOutputDto>.Failure(tenantIdResult.Error);
 
+        var validationErrors = new List<string>();
+
         var nameResult = PersonName.Create(input.Name);
         if (nameResult.IsFailure)
-            return Result<CustomerOutputDto>.Failure(nameResult.Error);
+            validationErrors.Add(nameResult.Error);
 
         var cpfResult = Cpf.Create(input.Cpf);
         if (cpfResult.IsFailure)
-            return Result<CustomerOutputDto>.Failure(cpfResult.Error);
+            validationErrors.Add(cpfResult.Error);
+
+        var contactResult = BuildOptionalContact(input.Email, input.Phone, input.Address);
+        if (contactResult.IsFailure)
+            validationErrors.Add(contactResult.Error);
+
+        if (validationErrors.Count > 0)
+            return Result<CustomerOutputDto>.Failure(string.Join(" • ", validationErrors));
+
+        if (nameResult.IsFailure || cpfResult.IsFailure || contactResult.IsFailure)
+            return Result<CustomerOutputDto>.Failure("Validation failed.");
 
         var policyResult = await registrationPolicy.ValidateUniqueCpfAsync(
             tenantIdResult.Value,
@@ -36,10 +48,6 @@ public sealed class CreateCustomerUseCase(
             cancellationToken: cancellationToken);
         if (policyResult.IsFailure)
             return Result<CustomerOutputDto>.Failure(policyResult.Error);
-
-        var contactResult = BuildOptionalContact(input.Email, input.Phone, input.Address);
-        if (contactResult.IsFailure)
-            return Result<CustomerOutputDto>.Failure(contactResult.Error);
 
         var (email, phone, address) = contactResult.Value;
 
@@ -67,13 +75,15 @@ public sealed class CreateCustomerUseCase(
         string? phone,
         string? address)
     {
+        var errors = new List<string>();
         Email? emailVo = null;
         if (!string.IsNullOrWhiteSpace(email))
         {
             var emailResult = Email.Create(email);
             if (emailResult.IsFailure)
-                return Result<(Email?, Phone?, Address?)>.Failure(emailResult.Error);
-            emailVo = emailResult.Value;
+                errors.Add(emailResult.Error);
+            else
+                emailVo = emailResult.Value;
         }
 
         Phone? phoneVo = null;
@@ -81,8 +91,9 @@ public sealed class CreateCustomerUseCase(
         {
             var phoneResult = Phone.Create(phone);
             if (phoneResult.IsFailure)
-                return Result<(Email?, Phone?, Address?)>.Failure(phoneResult.Error);
-            phoneVo = phoneResult.Value;
+                errors.Add(phoneResult.Error);
+            else
+                phoneVo = phoneResult.Value;
         }
 
         Address? addressVo = null;
@@ -90,9 +101,13 @@ public sealed class CreateCustomerUseCase(
         {
             var addressResult = Address.Create(address);
             if (addressResult.IsFailure)
-                return Result<(Email?, Phone?, Address?)>.Failure(addressResult.Error);
-            addressVo = addressResult.Value;
+                errors.Add(addressResult.Error);
+            else
+                addressVo = addressResult.Value;
         }
+
+        if (errors.Count > 0)
+            return Result<(Email?, Phone?, Address?)>.Failure(string.Join(" • ", errors));
 
         return Result<(Email?, Phone?, Address?)>.Success((emailVo, phoneVo, addressVo));
     }

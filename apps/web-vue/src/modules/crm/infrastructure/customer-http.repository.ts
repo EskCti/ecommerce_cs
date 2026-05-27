@@ -1,3 +1,4 @@
+import { parseApiError } from '@/shared/parse-api-error'
 import { err, ok, type Result } from '@/shared/result'
 import { CustomerEntity } from '../domain/customer.entity'
 import type {
@@ -22,15 +23,6 @@ type CustomerDto = {
   updatedAt: string
 }
 
-async function parseError(res: Response, fallback: string): Promise<string> {
-  try {
-    const body = (await res.json()) as { error?: string; title?: string }
-    return body.error ?? body.title ?? fallback
-  } catch {
-    return fallback
-  }
-}
-
 export class CustomerHttpRepository implements ICustomerRepository {
   constructor(private readonly getToken: TokenProvider) {}
 
@@ -51,14 +43,18 @@ export class CustomerHttpRepository implements ICustomerRepository {
 
     try {
       const res = await fetch(`/api/crm/customers?${params}`, { headers: this.headers() })
-      if (!res.ok) return err(await parseError(res, 'Falha ao listar clientes'))
-      const body = (await res.json()) as { items: CustomerDto[]; total: number }
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao listar clientes'))
+      const body = await res.json()
+      const rows = Array.isArray(body) ? body : (body as { items?: CustomerDto[] }).items ?? []
+      const totalCount = Array.isArray(body)
+        ? body.length
+        : ((body as { total?: number }).total ?? rows.length)
       const items: CustomerEntity[] = []
-      for (const row of body.items) {
+      for (const row of rows) {
         const mapped = CustomerEntity.fromApi(row)
         if (mapped.ok) items.push(mapped.data)
       }
-      return ok({ items, total: body.total })
+      return ok({ items, total: totalCount })
     } catch {
       return err('Erro de rede')
     }
@@ -71,7 +67,7 @@ export class CustomerHttpRepository implements ICustomerRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao criar cliente'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao criar cliente'))
       return CustomerEntity.fromApi((await res.json()) as CustomerDto)
     } catch {
       return err('Erro de rede')
@@ -85,7 +81,7 @@ export class CustomerHttpRepository implements ICustomerRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao atualizar cliente'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao atualizar cliente'))
       return CustomerEntity.fromApi((await res.json()) as CustomerDto)
     } catch {
       return err('Erro de rede')
@@ -98,7 +94,7 @@ export class CustomerHttpRepository implements ICustomerRepository {
         method: 'DELETE',
         headers: this.headers(),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao desativar cliente'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao desativar cliente'))
       return ok(undefined)
     } catch {
       return err('Erro de rede')
@@ -112,7 +108,7 @@ export class CustomerHttpRepository implements ICustomerRepository {
         headers: this.headers(),
         body: JSON.stringify(input),
       })
-      if (!res.ok) return err(await parseError(res, 'Falha ao buscar ou criar cliente por CPF'))
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao buscar ou criar cliente por CPF'))
       return CustomerEntity.fromApi((await res.json()) as CustomerDto)
     } catch {
       return err('Erro de rede')

@@ -9,7 +9,8 @@ import Dropdown from 'primevue/dropdown'
 import Message from 'primevue/message'
 import { useAuthStore } from '@/stores/auth'
 import { createCrmModule } from '@/modules/crm/composition'
-import type { PersonType, SupplierEntity } from '@/modules/crm/domain/supplier.entity'
+import { isValidCpf } from '@/modules/crm/domain/customer.entity'
+import { isValidCnpj, type PersonType, type SupplierEntity } from '@/modules/crm/domain/supplier.entity'
 
 const auth = useAuthStore()
 const module = createCrmModule(() => auth.token)
@@ -137,8 +138,27 @@ function openEdit(row: SupplierEntity) {
   dialogVisible.value = true
 }
 
+function validateForm(): string[] {
+  const errors: string[] = []
+  if (!form.value.name.trim()) errors.push('Nome do fornecedor é obrigatório')
+  if (!form.value.taxDocument.trim()) {
+    errors.push(form.value.personType === 'Company' ? 'CNPJ é obrigatório' : 'CPF é obrigatório')
+  } else if (form.value.personType === 'Company') {
+    if (!isValidCnpj(form.value.taxDocument)) errors.push('CNPJ inválido')
+  } else if (!isValidCpf(form.value.taxDocument)) {
+    errors.push('CPF inválido')
+  }
+  if (form.value.email.trim() && !form.value.email.includes('@')) errors.push('E-mail inválido')
+  return errors
+}
+
 async function save() {
   error.value = ''
+  const validationErrors = validateForm()
+  if (validationErrors.length > 0) {
+    error.value = validationErrors.join(' • ')
+    return
+  }
   const payload = {
     name: form.value.name.trim(),
     personType: form.value.personType,

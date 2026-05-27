@@ -14,7 +14,7 @@ public sealed class StoreSettingsLegacyAdapter(LegacySasDbContext db) : IStoreSe
     {
         try
         {
-            var row = await db.StoreConfigs.AsNoTracking()
+            var row = await db.Configs.AsNoTracking()
                 .FirstOrDefaultAsync(r => r.CompanyId == tenantId.Value, ct);
 
             if (row is null)
@@ -40,12 +40,12 @@ public sealed class StoreSettingsLegacyAdapter(LegacySasDbContext db) : IStoreSe
                 return Result.Failure(rowResult.Error);
 
             var row = rowResult.Value;
-            var existing = await db.StoreConfigs
+            var existing = await db.Configs
                 .FirstOrDefaultAsync(r => r.CompanyId == storeConfig.TenantId.Value, ct);
 
             if (existing is null)
             {
-                db.StoreConfigs.Add(row);
+                db.Configs.Add(row);
             }
             else
             {

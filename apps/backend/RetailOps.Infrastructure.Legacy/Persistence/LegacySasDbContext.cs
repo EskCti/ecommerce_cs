@@ -17,13 +17,18 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyProductRow> Products => Set<LegacyProductRow>();
     public DbSet<LegacyContractRow> Contracts => Set<LegacyContractRow>();
     public DbSet<LegacyConfigRow> Configs => Set<LegacyConfigRow>();
-    public DbSet<LegacyStoreConfigRow> StoreConfigs => Set<LegacyStoreConfigRow>();
     public DbSet<LegacyPaymentMethodRow> PaymentMethods => Set<LegacyPaymentMethodRow>();
     public DbSet<LegacyCashRegisterRow> CashRegisters => Set<LegacyCashRegisterRow>();
     public DbSet<LegacyReceivableRow> Receivables => Set<LegacyReceivableRow>();
     public DbSet<LegacyCustomerRow> Customers => Set<LegacyCustomerRow>();
     public DbSet<LegacySupplierRow> Suppliers => Set<LegacySupplierRow>();
     public DbSet<LegacyAttachmentRow> Attachments => Set<LegacyAttachmentRow>();
+    public DbSet<LegacyCategoryRow> Categories => Set<LegacyCategoryRow>();
+    public DbSet<LegacyGradeDimensionRow> GradeDimensions => Set<LegacyGradeDimensionRow>();
+    public DbSet<LegacyGradeOptionRow> GradeOptions => Set<LegacyGradeOptionRow>();
+    public DbSet<LegacyStockEntryRow> StockEntries => Set<LegacyStockEntryRow>();
+    public DbSet<LegacyStockExitRow> StockExits => Set<LegacyStockExitRow>();
+    public DbSet<LegacyGradeMovementDetailRow> GradeMovementDetails => Set<LegacyGradeMovementDetailRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -85,6 +90,16 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.CompanyId).HasColumnName("empresa");
             entity.Property(e => e.Code).HasColumnName("codigo").HasMaxLength(50);
             entity.Property(e => e.Name).HasColumnName("nome").HasMaxLength(100);
+            entity.Property(e => e.Description).HasColumnName("descricao").HasMaxLength(255);
+            entity.Property(e => e.Stock).HasColumnName("estoque");
+            entity.Property(e => e.SalePrice).HasColumnName("valor_venda");
+            entity.Property(e => e.CostPrice).HasColumnName("valor_compra");
+            entity.Property(e => e.ProfitMargin).HasColumnName("lucro");
+            entity.Property(e => e.SupplierLegacyId).HasColumnName("fornecedor");
+            entity.Property(e => e.CategoryLegacyId).HasColumnName("categoria");
+            entity.Property(e => e.StockAlertLevel).HasColumnName("nivel_estoque");
+            entity.Property(e => e.Active).HasColumnName("ativo").HasMaxLength(3);
+            entity.Property(e => e.Photo).HasColumnName("foto").HasMaxLength(100);
         });
 
         modelBuilder.Entity<LegacyContractRow>(entity =>
@@ -106,14 +121,6 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.TrialDays).HasColumnName("dias_teste");
             entity.Property(e => e.BlockDays).HasColumnName("dias_bloqueio");
             entity.Property(e => e.BlockMessage).HasColumnName("msg_bloqueio");
-        });
-
-        modelBuilder.Entity<LegacyStoreConfigRow>(entity =>
-        {
-            entity.ToTable("config");
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
-            entity.Property(e => e.CompanyId).HasColumnName("empresa");
             entity.Property(e => e.NomeSistema).HasColumnName("nome_sistema").HasMaxLength(100);
             entity.Property(e => e.Contatos).HasColumnName("contatos").HasMaxLength(200);
             entity.Property(e => e.CnpjSistema).HasColumnName("cnpj_sistema").HasMaxLength(20);
@@ -199,6 +206,77 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.Nome).HasColumnName("nome").HasMaxLength(100);
             entity.Property(e => e.Foto).HasColumnName("foto").HasMaxLength(500);
             entity.Property(e => e.DataValidade).HasColumnName("data_validade");
+        });
+
+        modelBuilder.Entity<LegacyCategoryRow>(entity =>
+        {
+            entity.ToTable("categorias");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.Name).HasColumnName("nome").HasMaxLength(100);
+            entity.Property(e => e.Active).HasColumnName("ativo").HasMaxLength(3);
+        });
+
+        modelBuilder.Entity<LegacyGradeDimensionRow>(entity =>
+        {
+            entity.ToTable("cat_grade");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.ProductLegacyId).HasColumnName("produto");
+            entity.Property(e => e.Name).HasColumnName("nome").HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<LegacyGradeOptionRow>(entity =>
+        {
+            entity.ToTable("itens_grade");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.DimensionLegacyId).HasColumnName("cat_grade");
+            entity.Property(e => e.Label).HasColumnName("label").HasMaxLength(50);
+            entity.Property(e => e.Stock).HasColumnName("estoque");
+        });
+
+        modelBuilder.Entity<LegacyStockEntryRow>(entity =>
+        {
+            entity.ToTable("entradas");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.ProductLegacyId).HasColumnName("produto");
+            entity.Property(e => e.Quantity).HasColumnName("quantidade");
+            entity.Property(e => e.Reason).HasColumnName("motivo").HasMaxLength(200);
+            entity.Property(e => e.UserId).HasColumnName("usuario");
+            entity.Property(e => e.CreatedAt).HasColumnName("data");
+            entity.Property(e => e.MovementType).HasColumnName("tipo").HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<LegacyStockExitRow>(entity =>
+        {
+            entity.ToTable("saidas");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.ProductLegacyId).HasColumnName("produto");
+            entity.Property(e => e.Quantity).HasColumnName("quantidade");
+            entity.Property(e => e.Reason).HasColumnName("motivo").HasMaxLength(200);
+            entity.Property(e => e.UserId).HasColumnName("usuario");
+            entity.Property(e => e.CreatedAt).HasColumnName("data");
+            entity.Property(e => e.MovementType).HasColumnName("tipo").HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<LegacyGradeMovementDetailRow>(entity =>
+        {
+            entity.ToTable("detalhes_grade");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.MovementType).HasColumnName("tipo_movimento").HasMaxLength(20);
+            entity.Property(e => e.MovementLegacyId).HasColumnName("id_movimento");
+            entity.Property(e => e.OptionLegacyId).HasColumnName("id_item_grade");
+            entity.Property(e => e.Quantity).HasColumnName("quantidade");
         });
 
         base.OnModelCreating(modelBuilder);

@@ -8,6 +8,7 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import { useAuthStore } from '@/stores/auth'
 import { createCrmModule } from '@/modules/crm/composition'
+import { isValidCpf } from '@/modules/crm/domain/customer.entity'
 import type { CustomerEntity } from '@/modules/crm/domain/customer.entity'
 
 const auth = useAuthStore()
@@ -89,8 +90,22 @@ function openEdit(row: CustomerEntity) {
   dialogVisible.value = true
 }
 
+function validateForm(): string[] {
+  const errors: string[] = []
+  if (!form.value.name.trim()) errors.push('Nome do cliente é obrigatório')
+  if (!form.value.cpf.trim()) errors.push('CPF é obrigatório')
+  else if (!isValidCpf(form.value.cpf)) errors.push('CPF inválido')
+  if (form.value.email.trim() && !form.value.email.includes('@')) errors.push('E-mail inválido')
+  return errors
+}
+
 async function save() {
   error.value = ''
+  const validationErrors = validateForm()
+  if (validationErrors.length > 0) {
+    error.value = validationErrors.join(' • ')
+    return
+  }
   const payload = {
     name: form.value.name.trim(),
     cpf: form.value.cpf,
@@ -128,7 +143,7 @@ onMounted(load)
       <h1 class="text-xl font-semibold">Clientes</h1>
       <Button label="Novo cliente" icon="pi pi-plus" @click="openCreate" />
     </div>
-    <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+    <Message v-if="error" severity="error" :closable="false" class="whitespace-pre-wrap">{{ error }}</Message>
     <div class="flex flex-wrap gap-2">
       <InputText v-model="nameFilter" placeholder="Filtrar por nome" class="w-64" @keyup.enter="search" />
       <InputText v-model="cpfFilter" placeholder="Filtrar por CPF" class="w-48" @keyup.enter="search" />
