@@ -22,6 +22,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.retailops.mobile.customers.ui.CustomerFormScreen
 import com.retailops.mobile.customers.ui.CustomerListScreen
+import com.retailops.mobile.pdv.ui.CheckoutScreen
+import com.retailops.mobile.pdv.ui.OpenCashSessionScreen
+import com.retailops.mobile.pdv.ui.PdvScanScreen
 import com.retailops.mobile.products.ui.ProductDetailScreen
 import com.retailops.mobile.products.ui.ProductListScreen
 import com.retailops.mobile.ui.theme.RetailOpsTheme
@@ -32,6 +35,9 @@ private object Routes {
     const val CUSTOMER_FORM = "customers/new"
     const val PRODUCTS = "products"
     const val PRODUCT_DETAIL = "products/{productId}"
+    const val PDV = "pdv"
+    const val PDV_OPEN = "pdv/open"
+    const val PDV_CHECKOUT = "pdv/checkout"
 
     fun productDetail(productId: String) = "products/$productId"
 }
@@ -56,8 +62,10 @@ private fun RetailOpsNavHost() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val bottomRoutes = setOf(Routes.CUSTOMERS, Routes.PRODUCTS)
-    val showBottomBar = currentRoute in bottomRoutes
+    val bottomRoutes = setOf(Routes.CUSTOMERS, Routes.PRODUCTS, Routes.PDV)
+    val showBottomBar = currentRoute in bottomRoutes ||
+        currentRoute == Routes.PDV_OPEN ||
+        currentRoute == Routes.PDV_CHECKOUT
 
     Scaffold(
         bottomBar = {
@@ -90,6 +98,22 @@ private fun RetailOpsNavHost() {
                         },
                         icon = { Text("P") },
                         label = { Text("Produtos") },
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == Routes.PDV ||
+                            currentRoute == Routes.PDV_OPEN ||
+                            currentRoute == Routes.PDV_CHECKOUT,
+                        onClick = {
+                            navController.navigate(Routes.PDV) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Text("$") },
+                        label = { Text("PDV") },
                     )
                 }
             }
@@ -128,6 +152,38 @@ private fun RetailOpsNavHost() {
                 ProductDetailScreen(
                     productId = productId,
                     onBack = { navController.popBackStack() },
+                    parentBackStackEntry = parentEntry,
+                )
+            }
+            composable(Routes.PDV) {
+                val parentEntry = navController.getBackStackEntry(Routes.PDV)
+                PdvScanScreen(
+                    onNavigateToOpenSession = {
+                        navController.navigate(Routes.PDV_OPEN)
+                    },
+                    onNavigateToCheckout = {
+                        navController.navigate(Routes.PDV_CHECKOUT)
+                    },
+                    parentBackStackEntry = parentEntry,
+                )
+            }
+            composable(Routes.PDV_OPEN) {
+                OpenCashSessionScreen(
+                    onSessionReady = {
+                        navController.navigate(Routes.PDV) {
+                            popUpTo(Routes.PDV) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                )
+            }
+            composable(Routes.PDV_CHECKOUT) {
+                val parentEntry = navController.getBackStackEntry(Routes.PDV)
+                CheckoutScreen(
+                    onBack = { navController.popBackStack() },
+                    onSaleCompleted = {
+                        navController.popBackStack(Routes.PDV, inclusive = false)
+                    },
                     parentBackStackEntry = parentEntry,
                 )
             }
