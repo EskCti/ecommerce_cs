@@ -20,6 +20,9 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyPaymentMethodRow> PaymentMethods => Set<LegacyPaymentMethodRow>();
     public DbSet<LegacyCashRegisterRow> CashRegisters => Set<LegacyCashRegisterRow>();
     public DbSet<LegacyReceivableRow> Receivables => Set<LegacyReceivableRow>();
+    public DbSet<LegacyCashSessionRow> CashSessions => Set<LegacyCashSessionRow>();
+    public DbSet<LegacyCartItemRow> CartItems => Set<LegacyCartItemRow>();
+    public DbSet<LegacyWithdrawalRow> Withdrawals => Set<LegacyWithdrawalRow>();
     public DbSet<LegacyCustomerRow> Customers => Set<LegacyCustomerRow>();
     public DbSet<LegacySupplierRow> Suppliers => Set<LegacySupplierRow>();
     public DbSet<LegacyAttachmentRow> Attachments => Set<LegacyAttachmentRow>();
@@ -159,11 +162,66 @@ public sealed class LegacySasDbContext : DbContext
             entity.ToTable("receber");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
             entity.Property(e => e.Type).HasColumnName("tipo").HasMaxLength(20);
             entity.Property(e => e.PersonId).HasColumnName("pessoa");
             entity.Property(e => e.Amount).HasColumnName("valor");
             entity.Property(e => e.DueDate).HasColumnName("data_venc");
             entity.Property(e => e.Paid).HasColumnName("pago").HasMaxLength(3);
+            entity.Property(e => e.CashSessionLegacyId).HasColumnName("caixa");
+            entity.Property(e => e.PaymentMethodLegacyId).HasColumnName("forma_pgto");
+            entity.Property(e => e.CustomerLegacyId).HasColumnName("cliente");
+            entity.Property(e => e.Subtotal).HasColumnName("subtotal");
+            entity.Property(e => e.Discount).HasColumnName("desconto");
+            entity.Property(e => e.ChangeAmount).HasColumnName("troco");
+            entity.Property(e => e.CommissionAmount).HasColumnName("comissao_venda");
+            entity.Property(e => e.OperatorLegacyUserId).HasColumnName("operador");
+            entity.Property(e => e.Cancelled).HasColumnName("cancelado").HasMaxLength(3);
+            entity.Property(e => e.CompletedAt).HasColumnName("data_venda");
+        });
+
+        modelBuilder.Entity<LegacyCashSessionRow>(entity =>
+        {
+            entity.ToTable("caixa");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.TerminalLegacyId).HasColumnName("terminal");
+            entity.Property(e => e.OperatorLegacyUserId).HasColumnName("operador");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(10);
+            entity.Property(e => e.OpeningFloat).HasColumnName("fundo_inicial");
+            entity.Property(e => e.TotalSold).HasColumnName("total_vendido");
+            entity.Property(e => e.CountedCash).HasColumnName("contado");
+            entity.Property(e => e.Breakage).HasColumnName("quebra");
+            entity.Property(e => e.OpenedAt).HasColumnName("data_abertura");
+            entity.Property(e => e.ClosedAt).HasColumnName("data_fechamento");
+        });
+
+        modelBuilder.Entity<LegacyCartItemRow>(entity =>
+        {
+            entity.ToTable("itens_venda");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.CashSessionLegacyId).HasColumnName("caixa");
+            entity.Property(e => e.ProductLegacyId).HasColumnName("produto");
+            entity.Property(e => e.Barcode).HasColumnName("codigo").HasMaxLength(50);
+            entity.Property(e => e.Quantity).HasColumnName("quantidade");
+            entity.Property(e => e.UnitPrice).HasColumnName("valor_unitario");
+            entity.Property(e => e.SaleLegacyId).HasColumnName("venda");
+            entity.Property(e => e.GradeOptionIds).HasColumnName("grade_opcoes");
+            entity.Property(e => e.Status).HasColumnName("status").HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<LegacyWithdrawalRow>(entity =>
+        {
+            entity.ToTable("sangrias");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.CashSessionLegacyId).HasColumnName("caixa");
+            entity.Property(e => e.Amount).HasColumnName("valor");
+            entity.Property(e => e.RegisteredAt).HasColumnName("data");
         });
 
         modelBuilder.Entity<LegacyCustomerRow>(entity =>

@@ -85,6 +85,18 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
         to: '/tenant/catalog/stock/movements',
         match: 'prefix',
       },
+      {
+        id: 'tenant-pdv',
+        label: 'PDV',
+        to: '/tenant/pdv',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-sales',
+        label: 'Vendas',
+        to: '/tenant/sales',
+        match: 'prefix',
+      },
     ],
   },
 ]

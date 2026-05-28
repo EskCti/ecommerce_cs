@@ -17,6 +17,12 @@ const router = createRouter({
       component: () => import('@/views/TrialRegisterView.vue'),
       meta: { public: true },
     },
+    {
+      path: '/tenant/pdv',
+      name: 'tenant-pdv',
+      component: () => import('@/views/PdvView.vue'),
+      meta: { permission: 'vendas' },
+    },
     ...shellRoutes,
     {
       path: '/platform',
@@ -104,6 +110,12 @@ const router = createRouter({
           component: () => import('@/views/StockMovementsView.vue'),
           meta: { permission: 'produtos' },
         },
+        {
+          path: 'sales',
+          name: 'tenant-sales',
+          component: () => import('@/views/SalesListView.vue'),
+          meta: { permissions: ['vendas', 'produtos'] },
+        },
       ],
     },
   ],
@@ -126,6 +138,11 @@ router.beforeEach(async (to) => {
 
   const permission = to.meta.permission as string | undefined
   if (permission && !auth.hasPermission(permission)) return '/tenant'
+
+  const permissions = to.meta.permissions as string[] | undefined
+  if (permissions?.length && !permissions.some((key) => auth.hasPermission(key))) {
+    return '/tenant'
+  }
 
   return true
 })

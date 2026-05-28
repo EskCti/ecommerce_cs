@@ -166,11 +166,60 @@ public sealed class LegacyCashRegisterRow
 public sealed class LegacyReceivableRow
 {
     public int Id { get; set; }
+    public int CompanyId { get; set; }
     public string Type { get; set; } = string.Empty;
     public int PersonId { get; set; }
     public decimal Amount { get; set; }
     public DateTime DueDate { get; set; }
     public string Paid { get; set; } = "Não";
+    public int? CashSessionLegacyId { get; set; }
+    public int? PaymentMethodLegacyId { get; set; }
+    public int? CustomerLegacyId { get; set; }
+    public decimal? Subtotal { get; set; }
+    public decimal? Discount { get; set; }
+    public decimal? ChangeAmount { get; set; }
+    public decimal? CommissionAmount { get; set; }
+    public int? OperatorLegacyUserId { get; set; }
+    public string? Cancelled { get; set; }
+    public DateTime? CompletedAt { get; set; }
+}
+
+public sealed class LegacyCashSessionRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int TerminalLegacyId { get; set; }
+    public int OperatorLegacyUserId { get; set; }
+    public string Status { get; set; } = "Aberto";
+    public decimal OpeningFloat { get; set; }
+    public decimal TotalSold { get; set; }
+    public decimal? CountedCash { get; set; }
+    public decimal? Breakage { get; set; }
+    public DateTime OpenedAt { get; set; }
+    public DateTime? ClosedAt { get; set; }
+}
+
+public sealed class LegacyCartItemRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int CashSessionLegacyId { get; set; }
+    public int ProductLegacyId { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public int SaleLegacyId { get; set; }
+    public string? GradeOptionIds { get; set; }
+    public string Status { get; set; } = "PendenteGrade";
+}
+
+public sealed class LegacyWithdrawalRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int CashSessionLegacyId { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime RegisteredAt { get; set; }
 }
 
 public sealed class LegacyCustomerRow

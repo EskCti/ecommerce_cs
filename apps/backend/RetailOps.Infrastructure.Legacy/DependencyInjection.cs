@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RetailOps.Core.Crm.Application.Ports;
 using RetailOps.Core.Catalog.Application.Ports;
+using RetailOps.Core.Sales.Application.Ports;
 using RetailOps.Core.StoreSettings.Application.Ports;
 using RetailOps.Infrastructure.Legacy.Persistence;
+using RetailOps.Infrastructure.Legacy.Sales;
 using RetailOps.Shared.Kernel.Domain.Transactions;
 
 namespace RetailOps.Infrastructure.Legacy;
@@ -33,6 +35,8 @@ public static class DependencyInjection
         // Catalog Legacy Adapter
         services.AddScoped<ICatalogLegacyPort, CatalogLegacyAdapter>();
         services.AddScoped<IStockLegacyPort, StockLegacyAdapter>();
+
+        services.AddScoped<ISalesLegacyPort, LegacySaleAdapter>();
 
         return services;
     }
