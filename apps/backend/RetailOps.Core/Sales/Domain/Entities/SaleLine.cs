@@ -11,6 +11,7 @@ public sealed class SaleLine : Entity
     public int Quantity { get; private set; }
     public UnitPrice UnitPrice { get; private set; } = null!;
     public IReadOnlyList<Guid> GradeOptionIds => _gradeOptionIds.AsReadOnly();
+    public Guid? GradeVariantId { get; private set; }
     public SaleLineStatus Status { get; private set; }
     public bool RequiresGrade { get; private set; }
 
@@ -25,7 +26,8 @@ public sealed class SaleLine : Entity
         UnitPrice unitPrice,
         bool requiresGrade,
         IEnumerable<Guid>? gradeOptionIds,
-        SaleLineStatus status)
+        SaleLineStatus status,
+        Guid? gradeVariantId = null)
     {
         ProductId = productId;
         Barcode = barcode;
@@ -33,6 +35,7 @@ public sealed class SaleLine : Entity
         UnitPrice = unitPrice;
         RequiresGrade = requiresGrade;
         Status = status;
+        GradeVariantId = gradeVariantId;
 
         if (gradeOptionIds is not null)
             _gradeOptionIds.AddRange(gradeOptionIds);
@@ -74,9 +77,10 @@ public sealed class SaleLine : Entity
         UnitPrice unitPrice,
         bool requiresGrade,
         SaleLineStatus status,
-        IEnumerable<Guid> gradeOptionIds)
+        IEnumerable<Guid> gradeOptionIds,
+        Guid? gradeVariantId = null)
     {
-        var line = new SaleLine(productId, barcode, quantity, unitPrice, requiresGrade, gradeOptionIds, status)
+        var line = new SaleLine(productId, barcode, quantity, unitPrice, requiresGrade, gradeOptionIds, status, gradeVariantId)
         {
             Id = id
         };
@@ -88,17 +92,28 @@ public sealed class SaleLine : Entity
 
     internal void SetRequiresGrade(bool requiresGrade) => RequiresGrade = requiresGrade;
 
-    public Result ConfirmGrade(IEnumerable<Guid> gradeOptionIds)
+    public Result ConfirmGrade(IEnumerable<Guid> gradeOptionIds, Guid? gradeVariantId = null)
     {
         if (!RequiresGrade)
             return Result.Failure("Line does not require grade confirmation.");
 
+        if (gradeVariantId is Guid variantId && variantId != Guid.Empty)
+        {
+            GradeVariantId = variantId;
+            _gradeOptionIds.Clear();
+            if (gradeOptionIds is not null)
+                _gradeOptionIds.AddRange(gradeOptionIds);
+            Status = SaleLineStatus.Ready;
+            return Result.Success();
+        }
+
         var options = gradeOptionIds?.ToList() ?? [];
         if (options.Count == 0)
-            return Result.Failure("At least one grade option is required.");
+            return Result.Failure("At least one grade option or grade variant id is required.");
 
         _gradeOptionIds.Clear();
         _gradeOptionIds.AddRange(options);
+        GradeVariantId = null;
         Status = SaleLineStatus.Ready;
 
         return Result.Success();

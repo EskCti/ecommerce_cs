@@ -51,7 +51,8 @@ public sealed class AddItemToCartUseCase(
         var product = productResult.Value;
         var quantity = scanResult.Value.Quantity;
 
-        if (!product.IsOpenPrice)
+        // Graded products: stock lives on GradeVariant; checked when operator confirms grade.
+        if (!product.IsOpenPrice && product.GradeDimensions.Count == 0)
         {
             var stockResult = await productCatalogService.GetAvailableStockAsync(
                 tenantIdResult.Value,

@@ -21,7 +21,7 @@ import type { CashRegisterTerminalEntity } from '@/modules/store-settings/domain
 import type { PaymentMethodEntity } from '@/modules/store-settings/domain/payment-method.entity'
 import type { TenantUserEntity } from '@/modules/users/domain/tenant-user.entity'
 import type { CustomerEntity } from '@/modules/crm/domain/customer.entity'
-import type { GradeDimension } from '@/modules/catalog/application/grade.repository'
+import type { GradeConfiguration } from '@/modules/catalog/application/grade.repository'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -71,9 +71,15 @@ const closeForm = ref({
 })
 
 const gradeLine = ref<CartLineEntity | null>(null)
-const gradeDimensions = ref<GradeDimension[]>([])
+const gradeConfig = ref<GradeConfiguration>({ dimensions: [], variants: [] })
+const gradeDimensions = computed(() => gradeConfig.value.dimensions)
+const gradeVariants = computed(() => gradeConfig.value.variants)
 const selectedGradeOptions = ref<Record<string, string | null>>({})
+const selectedGradeVariantId = ref<string | null>(null)
+const selectedVariantStock = ref<number | null>(null)
 const gradesLoading = ref(false)
+
+const usesCombinationStock = computed(() => gradeVariants.value.length > 0)
 
 const paymentTermsOptions = [
   { label: 'À vista', value: 'Cash' },
@@ -337,17 +343,34 @@ async function openGradeDialog(line: CartLineEntity) {
     const result = await catalog.listGradesUseCase.execute(line.productId)
     if (!result.ok) {
       error.value = result.error
-      gradeDimensions.value = []
+      gradeConfig.value = { dimensions: [], variants: [] }
       return
     }
-    gradeDimensions.value = result.data
-    for (const dim of result.data) {
+    gradeConfig.value = result.data
+    selectedGradeVariantId.value = null
+    for (const dim of result.data.dimensions) {
       selectedGradeOptions.value[dim.id] = dim.options[0]?.id ?? null
     }
+    syncSelectedVariant()
   } finally {
     gradesLoading.value = false
   }
 }
+
+function syncSelectedVariant() {
+  const optionIds = Object.values(selectedGradeOptions.value).filter(
+    (id): id is string => !!id,
+  )
+  const match = gradeVariants.value.find((v) => {
+    const sorted = [...v.optionIds].sort().join(',')
+    const selected = [...optionIds].sort().join(',')
+    return sorted === selected && sorted.length > 0
+  })
+  selectedGradeVariantId.value = match?.id ?? null
+  selectedVariantStock.value = match?.stock ?? null
+}
+
+watch(selectedGradeOptions, syncSelectedVariant, { deep: true })
 
 async function confirmGrade() {
   if (!gradeLine.value) return
@@ -358,11 +381,23 @@ async function confirmGrade() {
     error.value = 'Selecione uma opção em cada dimensão'
     return
   }
+  syncSelectedVariant()
+  if (usesCombinationStock.value && !selectedGradeVariantId.value) {
+    error.value =
+      'Combinação não cadastrada. Cadastre a combinação com estoque em Variações (grade) no produto.'
+    return
+  }
+  const qty = gradeLine.value.quantity
+  if (selectedVariantStock.value !== null && selectedVariantStock.value < qty) {
+    error.value = `Estoque insuficiente para esta combinação. Disponível: ${selectedVariantStock.value}.`
+    return
+  }
   loading.value = true
   try {
     const result = await sales.confirmGradeForItemUseCase.execute({
       lineId: gradeLine.value.id,
       gradeOptionIds,
+      gradeVariantId: selectedGradeVariantId.value ?? undefined,
     })
     if (!result.ok) {
       error.value = result.error
@@ -688,12 +723,25 @@ onMounted(init)
           <label class="block text-sm font-medium">{{ dim.name }}</label>
           <Dropdown
             v-model="selectedGradeOptions[dim.id]"
-            :options="dim.options.map((o) => ({ label: `${o.label} (est: ${o.stock})`, value: o.id }))"
+            :options="dim.options.map((o) => ({ label: o.label, value: o.id }))"
             option-label="label"
             option-value="value"
             class="w-full"
           />
         </div>
+        <p
+          v-if="usesCombinationStock && selectedGradeVariantId"
+          class="text-sm text-muted-foreground"
+        >
+          Estoque da combinação selecionada:
+          <span class="font-medium text-foreground">{{ selectedVariantStock ?? 0 }}</span>
+        </p>
+        <p
+          v-else-if="usesCombinationStock && !gradesLoading"
+          class="text-sm text-amber-600"
+        >
+          Selecione uma combinação cadastrada no produto (Variações / grade).
+        </p>
       </div>
       <template #footer>
         <Button label="Confirmar" :loading="loading || gradesLoading" @click="confirmGrade" />

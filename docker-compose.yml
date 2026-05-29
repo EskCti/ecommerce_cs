@@ -9,7 +9,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./apps/backend/scripts/legacy-dev-schema.sql:/docker-entrypoint-initdb.d/01-legacy.sql:ro
+      # Mount directory (not a single file) — avoids WSL2/Docker Desktop bind-mount errors.
+      - ./apps/backend/scripts:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

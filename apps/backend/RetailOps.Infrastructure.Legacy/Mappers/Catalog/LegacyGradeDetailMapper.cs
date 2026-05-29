@@ -78,6 +78,7 @@ public static class LegacyGradeDetailMapper
         GradeMovementDetail detail,
         int movementLegacyId,
         int optionLegacyId,
+        int? optionLegacyId2 = null,
         int? legacyId = null)
     {
         var row = new LegacyGradeMovementDetailRow
@@ -86,6 +87,10 @@ public static class LegacyGradeDetailMapper
             MovementType = detail.Type.ToString(),
             MovementLegacyId = movementLegacyId,
             OptionLegacyId = optionLegacyId,
+            OptionLegacyId2 = optionLegacyId2
+                ?? (detail.GradeOptionId2 is Guid second
+                    ? LegacyCatalogIds.ParseLegacyId(second, "0012")
+                    : null),
             Quantity = detail.Quantity.Value
         };
 

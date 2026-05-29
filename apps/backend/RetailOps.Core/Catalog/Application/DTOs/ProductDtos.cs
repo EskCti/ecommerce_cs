@@ -50,6 +50,7 @@ public sealed record ProductOutputDto
     public required DateTime CreatedAt { get; init; }
     public required DateTime UpdatedAt { get; init; }
     public required IReadOnlyList<GradeDimensionOutputDto> GradeDimensions { get; init; }
+    public required IReadOnlyList<GradeVariantOutputDto> GradeVariants { get; init; }
 
     public static ProductOutputDto FromDomain(Domain.Entities.Product product)
     {
@@ -74,7 +75,10 @@ public sealed record ProductOutputDto
             CreatedAt = product.CreatedAt,
             UpdatedAt = product.UpdatedAt,
             GradeDimensions = product.GradeDimensions
-                .Select(GradeDimensionOutputDto.FromDomain)
+                .Select(d => GradeDimensionOutputDto.FromDomain(d, product.HasTwoGradeDimensions()))
+                .ToList(),
+            GradeVariants = product.GradeVariants
+                .Select(v => GradeVariantOutputDto.FromDomain(v, product))
                 .ToList()
         };
     }

@@ -76,7 +76,10 @@ export class SalesHttpRepository implements ISalesRepository {
         {
           method: 'POST',
           headers: this.headers(),
-          body: JSON.stringify({ gradeOptionIds: input.gradeOptionIds }),
+          body: JSON.stringify({
+            gradeOptionIds: input.gradeOptionIds ?? [],
+            gradeVariantId: input.gradeVariantId ?? null,
+          }),
         },
       )
       if (!res.ok) return err(await parseApiError(res, 'Falha ao confirmar grade'))

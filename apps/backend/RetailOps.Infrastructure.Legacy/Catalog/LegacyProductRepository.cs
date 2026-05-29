@@ -78,6 +78,29 @@ public sealed class LegacyProductRepository(
         return result.IsFailure ? Result.Failure(result.Error) : Result.Success();
     }
 
+    public async Task<Result<(Product Product, GradeVariant Variant)>> FindVariantById(Guid variantId)
+    {
+        var legacyVariantId = LegacyCatalogIds.ParseLegacyId(variantId, "0015");
+        if (legacyVariantId is null)
+            return Result<(Product, GradeVariant)>.Failure("Invalid grade variant id.");
+
+        var variantRow = await db.GradeVariants.AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == legacyVariantId);
+
+        if (variantRow is null)
+            return Result<(Product, GradeVariant)>.Failure("Grade variant not found.");
+
+        var productId = LegacyCatalogIds.Product(variantRow.ProductLegacyId);
+        var productResult = await GetById(productId);
+        if (productResult.IsFailure)
+            return Result<(Product, GradeVariant)>.Failure(productResult.Error);
+
+        var variant = productResult.Value.GradeVariants.FirstOrDefault(v => v.Id == variantId);
+        return variant is null
+            ? Result<(Product, GradeVariant)>.Failure("Grade variant not found.")
+            : Result<(Product, GradeVariant)>.Success((productResult.Value, variant));
+    }
+
     public Task<Result> Delete(Guid id) =>
         Task.FromResult(Result.Failure("Product cannot be deleted. Use deactivation instead."));
 }

@@ -39,4 +39,9 @@ public sealed class GradeOption : Entity
         Stock = newStock;
         return Result.Success();
     }
+
+    internal void ClearStockForTwoDimensions()
+    {
+        Stock = StockQuantity.Create(0).Value;
+    }
 }

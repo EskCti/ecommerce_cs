@@ -123,7 +123,7 @@ public sealed class CashSession : Entity
         return Result.Success();
     }
 
-    public Result ConfirmGradeForLine(Guid lineId, IEnumerable<Guid> gradeOptionIds)
+    public Result ConfirmGradeForLine(Guid lineId, IEnumerable<Guid> gradeOptionIds, Guid? gradeVariantId = null)
     {
         if (Status != CashSessionStatus.Open)
             return Result.Failure("Cannot confirm grade on a closed cash session.");
@@ -132,7 +132,7 @@ public sealed class CashSession : Entity
         if (line is null)
             return Result.Failure("Cart line not found.");
 
-        return line.ConfirmGrade(gradeOptionIds);
+        return line.ConfirmGrade(gradeOptionIds, gradeVariantId);
     }
 
     public Result RegisterWithdrawal(CashWithdrawal withdrawal)

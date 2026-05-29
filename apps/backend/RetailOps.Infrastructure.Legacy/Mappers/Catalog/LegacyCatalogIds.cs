@@ -14,6 +14,9 @@ internal static class LegacyCatalogIds
     internal static Guid GradeOption(int legacyId) =>
         Guid.Parse($"00000000-0000-0000-0012-{legacyId:D12}");
 
+    internal static Guid GradeVariant(int legacyId) =>
+        Guid.Parse($"00000000-0000-0000-0015-{legacyId:D12}");
+
     internal static Guid StockEntry(int legacyId) =>
         Guid.Parse($"00000000-0000-0000-0013-{legacyId:D12}");
 

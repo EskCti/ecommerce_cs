@@ -1,3 +1,4 @@
+using RetailOps.Core.Catalog.Application.DTOs;
 using RetailOps.Core.Catalog.Domain.Entities;
 using RetailOps.Shared.Kernel.Domain.Results;
 using RetailOps.Shared.Kernel.Domain.ValueObjects;
@@ -24,6 +25,9 @@ public interface IStockLegacyPort
     Task<Result> AdjustStockAsync(TenantId tenantId, Guid productId, int newQuantity, CancellationToken ct = default);
     Task<Result> ReserveStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default);
     Task<Result> ReleaseStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default);
+    Task<Result> ReserveVariantStockAsync(TenantId tenantId, Guid variantId, int quantity, CancellationToken ct = default);
+    Task<Result> ReleaseVariantStockAsync(TenantId tenantId, Guid variantId, int quantity, CancellationToken ct = default);
+    Task<Result> AdjustVariantStockAsync(TenantId tenantId, Guid variantId, int newQuantity, CancellationToken ct = default);
 }
 
 public interface IProductCatalogService
@@ -32,4 +36,11 @@ public interface IProductCatalogService
     Task<Result<int>> GetAvailableStockAsync(TenantId tenantId, Guid productId, CancellationToken ct = default);
     Task<Result> ReserveStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default);
     Task<Result> ReleaseStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default);
+    Task<Result<int>> GetVariantStockAsync(TenantId tenantId, Guid variantId, CancellationToken ct = default);
+    Task<Result> ReserveVariantStockAsync(TenantId tenantId, Guid variantId, int quantity, CancellationToken ct = default);
+    Task<Result> ReleaseVariantStockAsync(TenantId tenantId, Guid variantId, int quantity, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<GradeVariantOutputDto>>> FindVariantsByProductAsync(
+        TenantId tenantId,
+        Guid productId,
+        CancellationToken ct = default);
 }

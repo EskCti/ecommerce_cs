@@ -1,3 +1,4 @@
+using RetailOps.Core.Catalog.Application.DTOs;
 using RetailOps.Core.Catalog.Application.Ports;
 using RetailOps.Core.Catalog.Domain.Repositories;
 using RetailOps.Core.Catalog.Domain.Services;
@@ -40,7 +41,27 @@ public sealed class ProductCatalogService(
         if (productResult.Value.TenantId.Value != tenantId.Value)
             return Result<int>.Failure("Product does not belong to this tenant.");
 
-        return Result<int>.Success(productResult.Value.Stock.Value);
+        var product = productResult.Value;
+        if (product.GradeDimensions.Count > 0)
+            return Result<int>.Failure("Use GetVariantStockAsync for graded products.");
+
+        return Result<int>.Success(product.Stock.Value);
+    }
+
+    public async Task<Result<int>> GetVariantStockAsync(
+        TenantId tenantId,
+        Guid variantId,
+        CancellationToken ct = default)
+    {
+        var lookup = await productRepository.FindVariantById(variantId);
+        if (lookup.IsFailure)
+            return Result<int>.Failure(lookup.Error);
+
+        var (product, variant) = lookup.Value;
+        if (product.TenantId.Value != tenantId.Value)
+            return Result<int>.Failure("Product does not belong to this tenant.");
+
+        return Result<int>.Success(variant.Stock.Value);
     }
 
     public async Task<Result> ReserveStockAsync(
@@ -57,6 +78,9 @@ public sealed class ProductCatalogService(
         if (product.TenantId.Value != tenantId.Value)
             return Result.Failure("Product does not belong to this tenant.");
 
+        if (product.GradeDimensions.Count > 0)
+            return Result.Failure("Use ReserveVariantStockAsync for graded products.");
+
         var exitQuantityResult = StockQuantity.Create(quantity);
         if (exitQuantityResult.IsFailure)
             return Result.Failure(exitQuantityResult.Error);
@@ -68,10 +92,62 @@ public sealed class ProductCatalogService(
         return await stockLegacyPort.ReserveStockAsync(tenantId, productId, quantity, ct);
     }
 
+    public async Task<Result> ReserveVariantStockAsync(
+        TenantId tenantId,
+        Guid variantId,
+        int quantity,
+        CancellationToken ct = default)
+    {
+        var lookup = await productRepository.FindVariantById(variantId);
+        if (lookup.IsFailure)
+            return Result.Failure(lookup.Error);
+
+        var (product, variant) = lookup.Value;
+        if (product.TenantId.Value != tenantId.Value)
+            return Result.Failure("Product does not belong to this tenant.");
+
+        var exitQuantityResult = StockQuantity.Create(quantity);
+        if (exitQuantityResult.IsFailure)
+            return Result.Failure(exitQuantityResult.Error);
+
+        var validation = stockAdjustmentPolicy.ValidateExit(variant.Stock, exitQuantityResult.Value);
+        if (validation.IsFailure)
+            return validation;
+
+        return await stockLegacyPort.ReserveVariantStockAsync(tenantId, variantId, quantity, ct);
+    }
+
     public async Task<Result> ReleaseStockAsync(
         TenantId tenantId,
         Guid productId,
         int quantity,
         CancellationToken ct = default) =>
         await stockLegacyPort.ReleaseStockAsync(tenantId, productId, quantity, ct);
+
+    public async Task<Result> ReleaseVariantStockAsync(
+        TenantId tenantId,
+        Guid variantId,
+        int quantity,
+        CancellationToken ct = default) =>
+        await stockLegacyPort.ReleaseVariantStockAsync(tenantId, variantId, quantity, ct);
+
+    public async Task<Result<IReadOnlyList<GradeVariantOutputDto>>> FindVariantsByProductAsync(
+        TenantId tenantId,
+        Guid productId,
+        CancellationToken ct = default)
+    {
+        var productResult = await productRepository.GetById(productId);
+        if (productResult.IsFailure)
+            return Result<IReadOnlyList<GradeVariantOutputDto>>.Failure(productResult.Error);
+
+        var product = productResult.Value;
+        if (product.TenantId.Value != tenantId.Value)
+            return Result<IReadOnlyList<GradeVariantOutputDto>>.Failure("Product does not belong to this tenant.");
+
+        var variants = product.GradeVariants
+            .Select(v => GradeVariantOutputDto.FromDomain(v, product))
+            .ToList();
+
+        return Result<IReadOnlyList<GradeVariantOutputDto>>.Success(variants);
+    }
 }

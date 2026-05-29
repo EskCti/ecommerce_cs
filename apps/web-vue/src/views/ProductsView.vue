@@ -11,6 +11,7 @@ import Checkbox from 'primevue/checkbox'
 import Message from 'primevue/message'
 import { useAuthStore } from '@/stores/auth'
 import { createCatalogModule } from '@/modules/catalog/composition'
+import ProductGradeDialog from '@/modules/catalog/ui/ProductGradeDialog.vue'
 import type { ProductEntity } from '@/modules/catalog/domain/product.entity'
 import type { CategoryEntity } from '@/modules/catalog/domain/category.entity'
 
@@ -28,10 +29,8 @@ const error = ref('')
 const loading = ref(false)
 const dialogVisible = ref(false)
 const gradesDialogVisible = ref(false)
-const gradesLoading = ref(false)
 const gradeProduct = ref<ProductEntity | null>(null)
-const grades = ref<{ id: string; name: string; options: { id: string; label: string; stock: number }[] }[]>([])
-const gradeForm = ref({ dimensionName: '', optionLabel: '', stock: 0, selectedDimensionId: null as string | null })
+const configureGradesAfterCreate = ref(true)
 const editing = ref<ProductEntity | null>(null)
 const form = ref({
   barcode: '',
@@ -105,6 +104,7 @@ function search() {
 
 function openCreate() {
   editing.value = null
+  configureGradesAfterCreate.value = true
   form.value = {
     barcode: '',
     name: '',
@@ -135,6 +135,18 @@ function openEdit(row: ProductEntity) {
     openPrice: row.isOpenPrice,
   }
   dialogVisible.value = true
+}
+
+function openGrades(row: ProductEntity) {
+  gradeProduct.value = row
+  gradesDialogVisible.value = true
+}
+
+function openGradesFromEdit() {
+  if (!editing.value) return
+  const product = editing.value
+  dialogVisible.value = false
+  openGrades(product)
 }
 
 async function generateBarcode() {
@@ -179,87 +191,33 @@ async function save() {
       error.value = result.error
       return
     }
-  } else {
-    const result = await module.createProductUseCase.execute({
-      barcode: form.value.barcode.trim(),
-      name: form.value.name.trim(),
-      description: form.value.description.trim() || undefined,
-      salePrice,
-      costPrice: Number(form.value.costPrice),
-      initialStock: Number(form.value.initialStock),
-      stockAlertLevel: Number(form.value.stockAlertLevel),
-      categoryId: form.value.categoryId,
-      photoPath: form.value.photoPath.trim() || undefined,
-    })
-    if (!result.ok) {
-      error.value = result.error
-      return
-    }
+    dialogVisible.value = false
+    await load()
+    return
   }
 
+  const result = await module.createProductUseCase.execute({
+    barcode: form.value.barcode.trim(),
+    name: form.value.name.trim(),
+    description: form.value.description.trim() || undefined,
+    salePrice,
+    costPrice: Number(form.value.costPrice),
+    initialStock: Number(form.value.initialStock),
+    stockAlertLevel: Number(form.value.stockAlertLevel),
+    categoryId: form.value.categoryId,
+    photoPath: form.value.photoPath.trim() || undefined,
+  })
+  if (!result.ok) {
+    error.value = result.error
+    return
+  }
+
+  const created = result.data
   dialogVisible.value = false
   await load()
-}
 
-async function openGrades(row: ProductEntity) {
-  gradeProduct.value = row
-  gradeForm.value = { dimensionName: '', optionLabel: '', stock: 0, selectedDimensionId: null }
-  error.value = ''
-  gradesLoading.value = true
-  gradesDialogVisible.value = true
-  try {
-    const result = await module.listGradesUseCase.execute(row.id)
-    if (!result.ok) {
-      error.value = result.error
-      grades.value = []
-      return
-    }
-    grades.value = result.data
-    if (result.data.length > 0) gradeForm.value.selectedDimensionId = result.data[0].id
-  } finally {
-    gradesLoading.value = false
-  }
-}
-
-async function addDimension() {
-  if (!gradeProduct.value || !gradeForm.value.dimensionName.trim()) return
-  gradesLoading.value = true
-  try {
-    const result = await module.configureGradeUseCase.execute(gradeProduct.value.id, {
-      action: 'AddDimension',
-      dimensionName: gradeForm.value.dimensionName.trim(),
-    })
-    if (!result.ok) {
-      error.value = result.error
-      return
-    }
-    grades.value = result.data
-    gradeForm.value.dimensionName = ''
-    if (result.data.length > 0) gradeForm.value.selectedDimensionId = result.data[result.data.length - 1].id
-  } finally {
-    gradesLoading.value = false
-  }
-}
-
-async function addOption() {
-  if (!gradeProduct.value || !gradeForm.value.selectedDimensionId || !gradeForm.value.optionLabel.trim()) return
-  gradesLoading.value = true
-  try {
-    const result = await module.configureGradeUseCase.execute(gradeProduct.value.id, {
-      action: 'AddOption',
-      dimensionId: gradeForm.value.selectedDimensionId,
-      optionLabel: gradeForm.value.optionLabel.trim(),
-      stock: Number(gradeForm.value.stock),
-    })
-    if (!result.ok) {
-      error.value = result.error
-      return
-    }
-    grades.value = result.data
-    gradeForm.value.optionLabel = ''
-    gradeForm.value.stock = 0
-  } finally {
-    gradesLoading.value = false
+  if (configureGradesAfterCreate.value) {
+    openGrades(created)
   }
 }
 
@@ -321,7 +279,12 @@ onMounted(async () => {
         <template #body="{ data }">
           <div class="flex gap-2">
             <Button icon="pi pi-pencil" text @click="openEdit(data as ProductEntity)" />
-            <Button icon="pi pi-th-large" text title="Grades" @click="openGrades(data as ProductEntity)" />
+            <Button
+              icon="pi pi-th-large"
+              text
+              title="Variações (grade)"
+              @click="openGrades(data as ProductEntity)"
+            />
             <Button
               v-if="(data as ProductEntity).isActive"
               icon="pi pi-ban"
@@ -344,11 +307,7 @@ onMounted(async () => {
         <div class="sm:col-span-2">
           <label class="mb-1 block text-sm">Código de barras</label>
           <div class="flex gap-2">
-            <InputText
-              v-model="form.barcode"
-              class="w-full"
-              :disabled="!!editing"
-            />
+            <InputText v-model="form.barcode" class="w-full" :disabled="!!editing" />
             <Button
               v-if="!editing"
               label="Gerar"
@@ -420,63 +379,36 @@ onMounted(async () => {
           <label class="mb-1 block text-sm">Caminho da foto</label>
           <InputText v-model="form.photoPath" class="w-full" placeholder="/uploads/produto.jpg" />
         </div>
+        <div v-if="!editing" class="space-y-1 sm:col-span-2">
+          <div class="flex items-center gap-2">
+            <Checkbox v-model="configureGradesAfterCreate" binary input-id="configureGradesAfterCreate" />
+            <label for="configureGradesAfterCreate" class="text-sm">
+              Abrir configuração de variações (grade) após salvar
+            </label>
+          </div>
+          <p class="text-xs text-muted-foreground pl-7">
+            A grade abre em outra janela. Com variações, o estoque é definido por combinação (não só no estoque inicial).
+          </p>
+        </div>
       </div>
       <template #footer>
         <Button label="Cancelar" text @click="dialogVisible = false" />
-        <Button label="Salvar" @click="save" />
+        <Button
+          v-if="editing"
+          label="Variações (grade)"
+          icon="pi pi-th-large"
+          severity="secondary"
+          outlined
+          @click="openGradesFromEdit"
+        />
+        <Button :label="editing ? 'Salvar' : 'Salvar produto'" @click="save" />
       </template>
     </Dialog>
 
-    <Dialog
+    <ProductGradeDialog
       v-model:visible="gradesDialogVisible"
-      :header="gradeProduct ? `Grades — ${gradeProduct.name}` : 'Grades'"
-      modal
-      class="w-full max-w-2xl"
-    >
-      <div v-if="gradesLoading" class="text-sm text-gray-500">Carregando...</div>
-      <div v-else class="space-y-4">
-        <div v-for="dim in grades" :key="dim.id" class="rounded border p-3">
-          <p class="font-medium">{{ dim.name }}</p>
-          <ul class="mt-2 space-y-1 text-sm">
-            <li v-for="opt in dim.options" :key="opt.id">
-              {{ opt.label }} — estoque: {{ opt.stock }}
-            </li>
-            <li v-if="dim.options.length === 0" class="text-gray-500">Sem opções</li>
-          </ul>
-        </div>
-        <div class="grid gap-2 sm:grid-cols-2">
-          <div>
-            <label class="mb-1 block text-sm">Nova dimensão (Cor, Tamanho)</label>
-            <InputText v-model="gradeForm.dimensionName" class="w-full" />
-          </div>
-          <div class="flex items-end">
-            <Button label="Adicionar dimensão" size="small" @click="addDimension" />
-          </div>
-        </div>
-        <div v-if="grades.length > 0" class="grid gap-2 sm:grid-cols-3">
-          <div>
-            <label class="mb-1 block text-sm">Dimensão</label>
-            <Dropdown
-              v-model="gradeForm.selectedDimensionId"
-              :options="grades.map((g) => ({ label: g.name, value: g.id }))"
-              option-label="label"
-              option-value="value"
-              class="w-full"
-            />
-          </div>
-          <div>
-            <label class="mb-1 block text-sm">Opção</label>
-            <InputText v-model="gradeForm.optionLabel" class="w-full" placeholder="P, M, Azul..." />
-          </div>
-          <div>
-            <label class="mb-1 block text-sm">Estoque</label>
-            <InputNumber v-model="gradeForm.stock" class="w-full" :min="0" />
-          </div>
-          <div class="sm:col-span-3">
-            <Button label="Adicionar opção" size="small" @click="addOption" />
-          </div>
-        </div>
-      </div>
-    </Dialog>
+      :product="gradeProduct"
+      :get-token="() => auth.token"
+    />
   </div>
 </template>

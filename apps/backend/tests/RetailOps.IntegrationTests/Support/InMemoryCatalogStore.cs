@@ -77,6 +77,18 @@ internal sealed class InMemoryProductRepository(CatalogTestState state) : IProdu
 
     public Task<Result> Delete(Guid id) =>
         Task.FromResult(Result.Failure("Product cannot be deleted. Use deactivation instead."));
+
+    public Task<Result<(Product Product, GradeVariant Variant)>> FindVariantById(Guid variantId)
+    {
+        foreach (var product in state.Products.Values)
+        {
+            var variant = product.GradeVariants.FirstOrDefault(v => v.Id == variantId);
+            if (variant is not null)
+                return Task.FromResult(Result<(Product, GradeVariant)>.Success((product, variant)));
+        }
+
+        return Task.FromResult(Result<(Product, GradeVariant)>.Failure("Grade variant not found."));
+    }
 }
 
 internal sealed class InMemoryCategoryRepository(CatalogTestState state) : ICategoryRepository
@@ -196,11 +208,82 @@ internal sealed class InMemoryStockLegacyPort(CatalogTestState state) : IStockLe
         return Task.FromResult(adjustResult);
     }
 
-    public Task<Result> ReserveStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default) =>
-        Task.FromResult(Result.Success());
+    public Task<Result> ReserveStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default)
+    {
+        if (!state.Products.TryGetValue(productId, out var product) || product.TenantId.Value != tenantId.Value)
+            return Task.FromResult(Result.Failure("Product not found."));
 
-    public Task<Result> ReleaseStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default) =>
-        Task.FromResult(Result.Success());
+        if (product.GradeDimensions.Count > 0)
+            return Task.FromResult(Result.Failure("Use variant stock reservation for graded products."));
+
+        var newStock = StockQuantity.Create(product.Stock.Value - quantity);
+        if (newStock.IsFailure || newStock.Value.Value < 0)
+            return Task.FromResult(Result.Failure("Insufficient stock."));
+
+        product.AdjustStock(newStock.Value, new StockAdjustmentPolicy());
+        return Task.FromResult(Result.Success());
+    }
+
+    public Task<Result> ReleaseStockAsync(TenantId tenantId, Guid productId, int quantity, CancellationToken ct = default)
+    {
+        if (!state.Products.TryGetValue(productId, out var product) || product.TenantId.Value != tenantId.Value)
+            return Task.FromResult(Result.Failure("Product not found."));
+
+        var newStock = StockQuantity.Create(product.Stock.Value + quantity);
+        if (newStock.IsFailure)
+            return Task.FromResult(Result.Failure(newStock.Error));
+
+        product.AdjustStock(newStock.Value, new StockAdjustmentPolicy());
+        return Task.FromResult(Result.Success());
+    }
+
+    public Task<Result> ReserveVariantStockAsync(TenantId tenantId, Guid variantId, int quantity, CancellationToken ct = default) =>
+        AdjustVariantDelta(tenantId, variantId, -quantity);
+
+    public Task<Result> ReleaseVariantStockAsync(TenantId tenantId, Guid variantId, int quantity, CancellationToken ct = default) =>
+        AdjustVariantDelta(tenantId, variantId, quantity);
+
+    public Task<Result> AdjustVariantStockAsync(TenantId tenantId, Guid variantId, int newQuantity, CancellationToken ct = default)
+    {
+        foreach (var product in state.Products.Values)
+        {
+            if (product.TenantId.Value != tenantId.Value)
+                continue;
+
+            var variant = product.GradeVariants.FirstOrDefault(v => v.Id == variantId);
+            if (variant is null)
+                continue;
+
+            var stock = StockQuantity.Create(newQuantity);
+            return stock.IsFailure
+                ? Task.FromResult(Result.Failure(stock.Error))
+                : Task.FromResult(product.AdjustVariantStock(variantId, stock.Value));
+        }
+
+        return Task.FromResult(Result.Failure("Grade variant not found."));
+    }
+
+    private Task<Result> AdjustVariantDelta(TenantId tenantId, Guid variantId, int delta)
+    {
+        foreach (var product in state.Products.Values)
+        {
+            if (product.TenantId.Value != tenantId.Value)
+                continue;
+
+            var variant = product.GradeVariants.FirstOrDefault(v => v.Id == variantId);
+            if (variant is null)
+                continue;
+
+            var newValue = variant.Stock.Value + delta;
+            if (newValue < 0)
+                return Task.FromResult(Result.Failure("Insufficient variant stock."));
+
+            var stock = StockQuantity.Create(newValue);
+            return Task.FromResult(product.AdjustVariantStock(variantId, stock.Value));
+        }
+
+        return Task.FromResult(Result.Failure("Grade variant not found."));
+    }
 }
 
 internal sealed class InMemoryProductQueries(CatalogTestState state) : IProductQueries
