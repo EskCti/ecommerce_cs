@@ -29,6 +29,7 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyCategoryRow> Categories => Set<LegacyCategoryRow>();
     public DbSet<LegacyGradeDimensionRow> GradeDimensions => Set<LegacyGradeDimensionRow>();
     public DbSet<LegacyGradeOptionRow> GradeOptions => Set<LegacyGradeOptionRow>();
+    public DbSet<LegacyGradeVariantRow> GradeVariants => Set<LegacyGradeVariantRow>();
     public DbSet<LegacyStockEntryRow> StockEntries => Set<LegacyStockEntryRow>();
     public DbSet<LegacyStockExitRow> StockExits => Set<LegacyStockExitRow>();
     public DbSet<LegacyGradeMovementDetailRow> GradeMovementDetails => Set<LegacyGradeMovementDetailRow>();
@@ -297,6 +298,18 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.Stock).HasColumnName("estoque");
         });
 
+        modelBuilder.Entity<LegacyGradeVariantRow>(entity =>
+        {
+            entity.ToTable("grade_variant");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.ProductLegacyId).HasColumnName("produto");
+            entity.Property(e => e.OptionLegacyId1).HasColumnName("itens_grade_1");
+            entity.Property(e => e.OptionLegacyId2).HasColumnName("itens_grade_2");
+            entity.Property(e => e.Stock).HasColumnName("estoque");
+        });
+
         modelBuilder.Entity<LegacyStockEntryRow>(entity =>
         {
             entity.ToTable("entradas");
@@ -334,6 +347,7 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.MovementType).HasColumnName("tipo_movimento").HasMaxLength(20);
             entity.Property(e => e.MovementLegacyId).HasColumnName("id_movimento");
             entity.Property(e => e.OptionLegacyId).HasColumnName("id_item_grade");
+            entity.Property(e => e.OptionLegacyId2).HasColumnName("id_item_grade_2");
             entity.Property(e => e.Quantity).HasColumnName("quantidade");
         });
 

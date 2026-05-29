@@ -22,6 +22,7 @@ public static class CatalogDependencyInjection
 
         services.AddScoped<ProductRegistrationPolicy>();
         services.AddScoped<StockAdjustmentPolicy>();
+        services.AddScoped<GradeVariantSyncService>();
 
         services.AddScoped<IProductCatalogService, ProductCatalogService>();
         services.AddScoped<IProductPurchasedPublisher, ProductPurchasedPublisherStub>();
@@ -35,6 +36,7 @@ public static class CatalogDependencyInjection
         services.AddScoped<UpdateCategoryUseCase>();
         services.AddScoped<GetCategoryUseCase>();
         services.AddScoped<ConfigureProductGradeUseCase>();
+        services.AddScoped<ResolveGradeVariantUseCase>();
         services.AddScoped<RecordStockEntryUseCase>();
         services.AddScoped<RecordStockExitUseCase>();
         services.AddScoped<PurchaseStockUseCase>();

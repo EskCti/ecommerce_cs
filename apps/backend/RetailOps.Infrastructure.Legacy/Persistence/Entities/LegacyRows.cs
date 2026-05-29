@@ -85,6 +85,16 @@ public sealed class LegacyGradeOptionRow
     public int Stock { get; set; }
 }
 
+public sealed class LegacyGradeVariantRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int ProductLegacyId { get; set; }
+    public int? OptionLegacyId1 { get; set; }
+    public int? OptionLegacyId2 { get; set; }
+    public int Stock { get; set; }
+}
+
 public sealed class LegacyStockEntryRow
 {
     public int Id { get; set; }
@@ -116,6 +126,7 @@ public sealed class LegacyGradeMovementDetailRow
     public string MovementType { get; set; } = string.Empty;
     public int MovementLegacyId { get; set; }
     public int OptionLegacyId { get; set; }
+    public int? OptionLegacyId2 { get; set; }
     public int Quantity { get; set; }
 }
 

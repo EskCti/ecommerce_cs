@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RetailOps.Core.Catalog.Application.Ports;
 using RetailOps.Core.Catalog.Domain.Entities;
+using RetailOps.Core.Catalog.Domain.Services;
 using RetailOps.Infrastructure.Legacy.Mappers.Catalog;
 using RetailOps.Infrastructure.Legacy.Persistence;
 using RetailOps.Infrastructure.Legacy.Persistence.Entities;
@@ -9,7 +10,9 @@ using RetailOps.Shared.Kernel.Domain.ValueObjects;
 
 namespace RetailOps.Infrastructure.Legacy;
 
-public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacyPort
+public sealed class CatalogLegacyAdapter(
+    LegacySasDbContext db,
+    GradeVariantSyncService gradeVariantSync) : ICatalogLegacyPort
 {
     public async Task<Result<IReadOnlyList<Product>>> GetProductsFromLegacyAsync(
         TenantId tenantId,
@@ -29,7 +32,10 @@ public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacy
                 var grades = await LoadGradeDimensionsAsync(tenantId, row.Id, productId, ct);
                 var mapped = LegacyProductMapper.ToDomain(row, grades);
                 if (mapped.IsSuccess)
+                {
+                    await ApplyGradeVariantsAsync(tenantId, row.Id, mapped.Value, ct);
                     products.Add(mapped.Value);
+                }
             }
 
             return Result<IReadOnlyList<Product>>.Success(products);
@@ -59,9 +65,11 @@ public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacy
 
             var grades = await LoadGradeDimensionsAsync(tenantId, row.Id, productId, ct);
             var result = LegacyProductMapper.ToDomain(row, grades);
-            return result.IsFailure
-                ? Result<Product?>.Failure(result.Error)
-                : Result<Product?>.Success(result.Value);
+            if (result.IsFailure)
+                return Result<Product?>.Failure(result.Error);
+
+            await ApplyGradeVariantsAsync(tenantId, row.Id, result.Value, ct);
+            return Result<Product?>.Success(result.Value);
         }
         catch (Exception ex)
         {
@@ -85,9 +93,11 @@ public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacy
             var productId = LegacyCatalogIds.Product(row.Id);
             var grades = await LoadGradeDimensionsAsync(tenantId, row.Id, productId, ct);
             var result = LegacyProductMapper.ToDomain(row, grades);
-            return result.IsFailure
-                ? Result<Product?>.Failure(result.Error)
-                : Result<Product?>.Success(result.Value);
+            if (result.IsFailure)
+                return Result<Product?>.Failure(result.Error);
+
+            await ApplyGradeVariantsAsync(tenantId, row.Id, result.Value, ct);
+            return Result<Product?>.Success(result.Value);
         }
         catch (Exception ex)
         {
@@ -134,6 +144,8 @@ public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacy
 
             product.SyncIdentity(LegacyCatalogIds.Product(savedLegacyId));
             await SaveGradeDimensionsAsync(product, savedLegacyId, ct);
+            await PruneOrphanGradeDataAsync(product, savedLegacyId, ct);
+            await SaveGradeVariantsAsync(product, savedLegacyId, ct);
 
             return Result<int>.Success(savedLegacyId);
         }
@@ -394,6 +406,56 @@ public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacy
         return dimensions;
     }
 
+    private async Task ApplyGradeVariantsAsync(
+        TenantId tenantId,
+        int productLegacyId,
+        Product product,
+        CancellationToken ct)
+    {
+        var variantRows = await db.GradeVariants.AsNoTracking()
+            .Where(v => v.CompanyId == tenantId.Value && v.ProductLegacyId == productLegacyId)
+            .ToListAsync(ct);
+
+        var variants = new List<GradeVariant>();
+        foreach (var row in variantRows)
+        {
+            var mapped = LegacyGradeVariantMapper.ToDomain(row, product.Id, product.GradeDimensions);
+            if (mapped.IsSuccess)
+                variants.Add(mapped.Value);
+        }
+
+        if (variants.Count > 0)
+            product.SetGradeVariants(variants);
+        else
+            gradeVariantSync.MigrateOptionsStockToVariants(product);
+    }
+
+    private async Task SaveGradeVariantsAsync(Product product, int productLegacyId, CancellationToken ct)
+    {
+        var existingRows = await db.GradeVariants
+            .Where(v => v.CompanyId == product.TenantId.Value && v.ProductLegacyId == productLegacyId)
+            .ToListAsync(ct);
+
+        db.GradeVariants.RemoveRange(existingRows);
+
+        foreach (var variant in product.GradeVariants)
+        {
+            var rowResult = LegacyGradeVariantMapper.ToLegacy(
+                variant,
+                productLegacyId,
+                product.GradeDimensions);
+
+            if (rowResult.IsFailure)
+                continue;
+
+            var row = rowResult.Value;
+            row.CompanyId = product.TenantId.Value;
+            db.GradeVariants.Add(row);
+            await db.SaveChangesAsync(ct);
+            variant.SyncIdentity(LegacyCatalogIds.GradeVariant(row.Id));
+        }
+    }
+
     private async Task SaveGradeDimensionsAsync(Product product, int productLegacyId, CancellationToken ct)
     {
         foreach (var dimension in product.GradeDimensions)
@@ -475,6 +537,46 @@ public sealed class CatalogLegacyAdapter(LegacySasDbContext db) : ICatalogLegacy
         }
     }
 
+    private async Task PruneOrphanGradeDataAsync(Product product, int productLegacyId, CancellationToken ct)
+    {
+        var dimensionRows = await db.GradeDimensions
+            .Where(d => d.CompanyId == product.TenantId.Value && d.ProductLegacyId == productLegacyId)
+            .ToListAsync(ct);
+
+        var currentDimensionLegacyIds = product.GradeDimensions
+            .Select(d => LegacyCatalogIds.ParseLegacyId(d.Id, "0011"))
+            .Where(id => id is > 0)
+            .Select(id => id!.Value)
+            .ToHashSet();
+
+        var currentOptionLegacyIds = product.GradeDimensions
+            .SelectMany(d => d.Options)
+            .Select(o => LegacyCatalogIds.ParseLegacyId(o.Id, "0012"))
+            .Where(id => id is > 0)
+            .Select(id => id!.Value)
+            .ToHashSet();
+
+        foreach (var dimensionRow in dimensionRows)
+        {
+            var optionRows = await db.GradeOptions
+                .Where(o => o.CompanyId == product.TenantId.Value && o.DimensionLegacyId == dimensionRow.Id)
+                .ToListAsync(ct);
+
+            if (!currentDimensionLegacyIds.Contains(dimensionRow.Id))
+            {
+                db.GradeOptions.RemoveRange(optionRows);
+                db.GradeDimensions.Remove(dimensionRow);
+                continue;
+            }
+
+            var orphanOptions = optionRows.Where(o => !currentOptionLegacyIds.Contains(o.Id)).ToList();
+            if (orphanOptions.Count > 0)
+                db.GradeOptions.RemoveRange(orphanOptions);
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
     private static void MapProductRow(LegacyProductRow existing, LegacyProductRow row)
     {
         existing.Code = row.Code;
@@ -522,17 +624,136 @@ public sealed class StockLegacyAdapter(LegacySasDbContext db) : IStockLegacyPort
         }
     }
 
-    public Task<Result> ReserveStockAsync(
+    public async Task<Result> ReserveStockAsync(
         TenantId tenantId,
         Guid productId,
         int quantity,
-        CancellationToken ct = default) =>
-        Task.FromResult(Result.Success());
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var legacyId = LegacyCatalogIds.ParseLegacyId(productId, "0009");
+            if (legacyId is null)
+                return Result.Failure("Invalid product id.");
 
-    public Task<Result> ReleaseStockAsync(
+            var product = await db.Products
+                .FirstOrDefaultAsync(p => p.Id == legacyId && p.CompanyId == tenantId.Value, ct);
+
+            if (product is null)
+                return Result.Failure("Product not found.");
+
+            if (product.Stock < quantity)
+                return Result.Failure("Insufficient stock.");
+
+            product.Stock -= quantity;
+            await db.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to reserve stock: {ex.Message}");
+        }
+    }
+
+    public async Task<Result> ReleaseStockAsync(
         TenantId tenantId,
         Guid productId,
         int quantity,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var legacyId = LegacyCatalogIds.ParseLegacyId(productId, "0009");
+            if (legacyId is null)
+                return Result.Failure("Invalid product id.");
+
+            var product = await db.Products
+                .FirstOrDefaultAsync(p => p.Id == legacyId && p.CompanyId == tenantId.Value, ct);
+
+            if (product is null)
+                return Result.Failure("Product not found.");
+
+            product.Stock += quantity;
+            await db.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to release stock: {ex.Message}");
+        }
+    }
+
+    public async Task<Result> ReserveVariantStockAsync(
+        TenantId tenantId,
+        Guid variantId,
+        int quantity,
         CancellationToken ct = default) =>
-        Task.FromResult(Result.Success());
+        await AdjustVariantStockDeltaAsync(tenantId, variantId, -quantity, ct);
+
+    public async Task<Result> ReleaseVariantStockAsync(
+        TenantId tenantId,
+        Guid variantId,
+        int quantity,
+        CancellationToken ct = default) =>
+        await AdjustVariantStockDeltaAsync(tenantId, variantId, quantity, ct);
+
+    public async Task<Result> AdjustVariantStockAsync(
+        TenantId tenantId,
+        Guid variantId,
+        int newQuantity,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var legacyId = LegacyCatalogIds.ParseLegacyId(variantId, "0015");
+            if (legacyId is null)
+                return Result.Failure("Invalid grade variant id.");
+
+            var row = await db.GradeVariants
+                .FirstOrDefaultAsync(v => v.Id == legacyId && v.CompanyId == tenantId.Value, ct);
+
+            if (row is null)
+                return Result.Failure("Grade variant not found.");
+
+            row.Stock = newQuantity;
+            await db.SaveChangesAsync(ct);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to adjust variant stock: {ex.Message}");
+        }
+    }
+
+    private async Task<Result> AdjustVariantStockDeltaAsync(
+        TenantId tenantId,
+        Guid variantId,
+        int delta,
+        CancellationToken ct)
+    {
+        try
+        {
+            var legacyId = LegacyCatalogIds.ParseLegacyId(variantId, "0015");
+            if (legacyId is null)
+                return Result.Failure("Invalid grade variant id.");
+
+            var row = await db.GradeVariants
+                .FirstOrDefaultAsync(v => v.Id == legacyId && v.CompanyId == tenantId.Value, ct);
+
+            if (row is null)
+                return Result.Failure("Grade variant not found.");
+
+            if (delta < 0 && row.Stock < Math.Abs(delta))
+                return Result.Failure("Insufficient variant stock.");
+
+            row.Stock += delta;
+            await db.SaveChangesAsync(ct);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to update variant stock: {ex.Message}");
+        }
+    }
 }
