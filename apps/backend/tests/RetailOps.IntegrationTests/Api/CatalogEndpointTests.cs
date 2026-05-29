@@ -213,6 +213,144 @@ public class CatalogEndpointTests : IClassFixture<CatalogWebApplicationFactory>
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return _client.SendAsync(req);
     }
+
+    [Fact]
+    public async Task GradeMatrix_TwoDimensions_ExposesVariantsWithStock()
+    {
+        AuthWebApplicationFactory.ConfigureUser(CatalogWebApplicationFactory.CreateTenantAdmin(1));
+        _factory.Fixture.Reset();
+        var token = await LoginToken("tenant1@test.com");
+        var categoryId = await CreateCategory(token, "Vestuário");
+
+        var create = await AuthorizedPost("/api/catalog/products", token, new
+        {
+            barcode = "7899999999991",
+            name = "Camiseta 2D",
+            salePrice = 49.9m,
+            costPrice = 20m,
+            initialStock = 0,
+            stockAlertLevel = 2,
+            categoryId,
+            isActive = true,
+        });
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var productId = (await create.Content.ReadFromJsonAsync<JsonElement>())!.GetProperty("id").GetGuid();
+
+        await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddDimension",
+            dimensionName = "Cor",
+        });
+        await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddDimension",
+            dimensionName = "Tamanho",
+        });
+        await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddOption",
+            dimensionId = (await GetFirstDimensionId(productId, token, "Cor")),
+            optionLabel = "Azul",
+            stock = 0,
+        });
+        await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddOption",
+            dimensionId = (await GetFirstDimensionId(productId, token, "Cor")),
+            optionLabel = "Vermelho",
+            stock = 0,
+        });
+        var tamanhoDim = await GetFirstDimensionId(productId, token, "Tamanho");
+        await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddOption",
+            dimensionId = tamanhoDim,
+            optionLabel = "P",
+            stock = 0,
+        });
+        await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddOption",
+            dimensionId = tamanhoDim,
+            optionLabel = "M",
+            stock = 0,
+        });
+
+        var listAfterOptions = await AuthorizedGet($"/api/catalog/products/{productId}/grades", token);
+        var configAfterOptions = await listAfterOptions.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(0, configAfterOptions!.GetProperty("variants").GetArrayLength());
+
+        var azulId = await GetOptionId(productId, token, "Cor", "Azul");
+        var pId = await GetOptionId(productId, token, "Tamanho", "P");
+
+        var addVariant = await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddVariant",
+            optionIds = new[] { azulId, pId },
+            stock = 5,
+        });
+        Assert.Equal(HttpStatusCode.OK, addVariant.StatusCode);
+
+        var list = await AuthorizedGet($"/api/catalog/products/{productId}/grades", token);
+        var config = await list.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(1, config!.GetProperty("variants").GetArrayLength());
+        Assert.Equal(5, config.GetProperty("variants")[0].GetProperty("stock").GetInt32());
+
+        var variantId = config.GetProperty("variants")[0].GetProperty("id").GetGuid();
+        var remove = await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "RemoveVariant",
+            variantId,
+        });
+        Assert.Equal(HttpStatusCode.OK, remove.StatusCode);
+
+        var addAgain = await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "AddVariant",
+            optionIds = new[] { azulId, pId },
+            stock = 2,
+        });
+        Assert.Equal(HttpStatusCode.OK, addAgain.StatusCode);
+
+        var blockRemove = await AuthorizedPost($"/api/catalog/products/{productId}/grades", token, new
+        {
+            action = "RemoveGrade",
+            optionId = azulId,
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, blockRemove.StatusCode);
+    }
+
+    private async Task<Guid> GetOptionId(Guid productId, string token, string dimensionName, string optionLabel)
+    {
+        var list = await AuthorizedGet($"/api/catalog/products/{productId}/grades", token);
+        var config = await list.Content.ReadFromJsonAsync<JsonElement>();
+        foreach (var dim in config!.GetProperty("dimensions").EnumerateArray())
+        {
+            if (dim.GetProperty("name").GetString() != dimensionName)
+                continue;
+
+            foreach (var opt in dim.GetProperty("options").EnumerateArray())
+            {
+                if (opt.GetProperty("label").GetString() == optionLabel)
+                    return opt.GetProperty("id").GetGuid();
+            }
+        }
+
+        throw new InvalidOperationException($"Option {optionLabel} not found in {dimensionName}.");
+    }
+
+    private async Task<Guid> GetFirstDimensionId(Guid productId, string token, string name)
+    {
+        var list = await AuthorizedGet($"/api/catalog/products/{productId}/grades", token);
+        var config = await list.Content.ReadFromJsonAsync<JsonElement>();
+        foreach (var dim in config.GetProperty("dimensions").EnumerateArray())
+        {
+            if (dim.GetProperty("name").GetString() == name)
+                return dim.GetProperty("id").GetGuid();
+        }
+
+        throw new InvalidOperationException($"Dimension {name} not found.");
+    }
 }
 
 public class CatalogWebApplicationFactory : AuthWebApplicationFactory
