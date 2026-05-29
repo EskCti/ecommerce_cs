@@ -10,7 +10,8 @@ public sealed record AddItemToCartInputDto
 
 public sealed record ConfirmGradeForItemInputDto
 {
-    public required IReadOnlyList<Guid> GradeOptionIds { get; init; }
+    public IReadOnlyList<Guid> GradeOptionIds { get; init; } = [];
+    public Guid? GradeVariantId { get; init; }
 }
 
 public sealed record CartLineOutputDto
@@ -24,6 +25,7 @@ public sealed record CartLineOutputDto
     public required string Status { get; init; }
     public required bool RequiresGrade { get; init; }
     public required IReadOnlyList<Guid> GradeOptionIds { get; init; }
+    public Guid? GradeVariantId { get; init; }
 
     public static CartLineOutputDto FromDomain(SaleLine line) =>
         new()
@@ -37,5 +39,6 @@ public sealed record CartLineOutputDto
             Status = line.Status.ToString(),
             RequiresGrade = line.RequiresGrade,
             GradeOptionIds = line.GradeOptionIds.ToList(),
+            GradeVariantId = line.GradeVariantId,
         };
 }
