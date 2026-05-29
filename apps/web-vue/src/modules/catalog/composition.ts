@@ -18,7 +18,11 @@ import {
   RecordStockEntryUseCase,
   RecordStockExitUseCase,
 } from './application/stock.usecase'
-import { ConfigureGradeUseCase, ListGradesUseCase } from './application/grade.usecase'
+import {
+  AdjustVariantStockUseCase,
+  ConfigureGradeUseCase,
+  ListGradesUseCase,
+} from './application/grade.usecase'
 import { CategoryHttpRepository } from './infrastructure/category-http.repository'
 import { GradeHttpRepository } from './infrastructure/grade-http.repository'
 import { ProductHttpRepository } from './infrastructure/product-http.repository'
@@ -47,5 +51,6 @@ export function createCatalogModule(getToken: () => string | null) {
     listLowStockUseCase: new ListLowStockUseCase(stockRepository),
     listGradesUseCase: new ListGradesUseCase(gradeRepository),
     configureGradeUseCase: new ConfigureGradeUseCase(gradeRepository),
+    adjustVariantStockUseCase: new AdjustVariantStockUseCase(gradeRepository),
   }
 }

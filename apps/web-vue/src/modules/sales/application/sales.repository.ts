@@ -16,7 +16,8 @@ export type AddCartItemInput = {
 
 export type ConfirmGradeInput = {
   lineId: string
-  gradeOptionIds: string[]
+  gradeOptionIds?: string[]
+  gradeVariantId?: string
 }
 
 export type CashWithdrawalInput = {
