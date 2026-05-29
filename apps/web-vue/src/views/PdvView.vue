@@ -21,11 +21,7 @@ import type { CashRegisterTerminalEntity } from '@/modules/store-settings/domain
 import type { PaymentMethodEntity } from '@/modules/store-settings/domain/payment-method.entity'
 import type { TenantUserEntity } from '@/modules/users/domain/tenant-user.entity'
 import type { CustomerEntity } from '@/modules/crm/domain/customer.entity'
-import type {
-  GradeConfiguration,
-  GradeDimension,
-  GradeVariant,
-} from '@/modules/catalog/application/grade.repository'
+import type { GradeConfiguration } from '@/modules/catalog/application/grade.repository'
 
 const router = useRouter()
 const auth = useAuthStore()
