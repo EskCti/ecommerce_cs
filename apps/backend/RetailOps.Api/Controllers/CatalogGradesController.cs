@@ -23,7 +23,9 @@ public sealed class CatalogGradesController(
             return Forbid();
 
         var result = await getProductUseCase.Execute((TenantId, productId), ct);
-        return result.IsFailure ? BadRequest(new { error = result.Error }) : Ok(result.Value.GradeDimensions);
+        return result.IsFailure
+            ? BadRequest(new { error = result.Error })
+            : Ok(GradeConfigurationOutputDto.FromProductOutput(result.Value));
     }
 
     [HttpPost]
