@@ -28,6 +28,9 @@ public sealed class Product : Entity
     private readonly List<GradeDimension> _gradeDimensions = [];
     public IReadOnlyList<GradeDimension> GradeDimensions => _gradeDimensions.AsReadOnly();
 
+    private readonly List<GradeVariant> _gradeVariants = [];
+    public IReadOnlyList<GradeVariant> GradeVariants => _gradeVariants.AsReadOnly();
+
     private Product() { }
 
     private Product(
@@ -115,7 +118,8 @@ public sealed class Product : Entity
         bool isOpenPrice,
         DateTime createdAt,
         DateTime updatedAt,
-        IEnumerable<GradeDimension>? gradeDimensions = null)
+        IEnumerable<GradeDimension>? gradeDimensions = null,
+        IEnumerable<GradeVariant>? gradeVariants = null)
     {
         var product = new Product(
             tenantId,
@@ -140,6 +144,9 @@ public sealed class Product : Entity
 
         if (gradeDimensions is not null)
             product._gradeDimensions.AddRange(gradeDimensions);
+
+        if (gradeVariants is not null)
+            product._gradeVariants.AddRange(gradeVariants);
 
         return Result<Product>.Success(product);
     }
@@ -215,6 +222,9 @@ public sealed class Product : Entity
         if (dimension.ProductId != Id && Id != Guid.Empty)
             return Result.Failure("Grade dimension does not belong to this product.");
 
+        if (_gradeDimensions.Count >= GradeVariantSyncService.MaxDimensions)
+            return Result.Failure($"A product may have at most {GradeVariantSyncService.MaxDimensions} grade dimensions.");
+
         _gradeDimensions.Add(dimension);
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
@@ -251,5 +261,87 @@ public sealed class Product : Entity
         _gradeDimensions.AddRange(dimensions);
     }
 
+    internal void SetGradeVariants(IEnumerable<GradeVariant> variants)
+    {
+        _gradeVariants.Clear();
+        _gradeVariants.AddRange(variants);
+    }
+
+    internal void ClearGradeVariants() => _gradeVariants.Clear();
+
+    public Result<GradeVariant> AddGradeVariant(IReadOnlyList<Guid> optionIds, StockQuantity stock)
+    {
+        if (_gradeVariants.Any(v => v.MatchesOptions(optionIds)))
+            return Result<GradeVariant>.Failure("Grade variant already exists for this combination.");
+
+        var variantResult = GradeVariant.Create(Id, optionIds, stock);
+        if (variantResult.IsFailure)
+            return variantResult;
+
+        _gradeVariants.Add(variantResult.Value);
+        UpdatedAt = DateTime.UtcNow;
+        return variantResult;
+    }
+
+    public Result AdjustVariantStock(Guid variantId, StockQuantity newStock)
+    {
+        var variant = _gradeVariants.FirstOrDefault(v => v.Id == variantId);
+        if (variant is null)
+            return Result.Failure("Grade variant not found.");
+
+        return variant.AdjustStock(newStock);
+    }
+
+    public Result RemoveGradeVariant(Guid variantId)
+    {
+        var variant = _gradeVariants.FirstOrDefault(v => v.Id == variantId);
+        if (variant is null)
+            return Result.Failure("Grade variant not found.");
+
+        _gradeVariants.Remove(variant);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    internal void RemoveVariantsReferencingOption(Guid optionId)
+    {
+        _gradeVariants.RemoveAll(v => v.ReferencesOption(optionId));
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public Result<GradeVariant?> FindVariantById(Guid variantId) =>
+        Result<GradeVariant?>.Success(_gradeVariants.FirstOrDefault(v => v.Id == variantId));
+
+    public Result<GradeVariant?> FindVariantByOptions(IEnumerable<Guid> optionIds)
+    {
+        var match = _gradeVariants.FirstOrDefault(v => v.MatchesOptions(optionIds));
+        return Result<GradeVariant?>.Success(match);
+    }
+
+    public bool HasTwoGradeDimensions() => _gradeDimensions.Count >= 2;
+
     public bool IsLowStock() => LowStockPolicy.IsLowStock(Stock, StockAlertLevel);
+
+    /// <summary>
+    /// Keeps product-level stock aligned with grade variants (2D) or options (1D) for legacy produtos.estoque.
+    /// </summary>
+    internal Result SyncAggregateStockFromGrades()
+    {
+        if (_gradeDimensions.Count == 0)
+            return Result.Success();
+
+        var total = _gradeVariants.Count > 0
+            ? _gradeVariants.Sum(v => v.Stock.Value)
+            : _gradeDimensions.Count == 1
+                ? _gradeDimensions[0].Options.Sum(o => o.Stock.Value)
+                : 0;
+
+        var stockResult = StockQuantity.Create(total);
+        if (stockResult.IsFailure)
+            return stockResult;
+
+        Stock = stockResult.Value;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
 }
