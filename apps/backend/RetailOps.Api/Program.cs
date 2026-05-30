@@ -57,9 +57,11 @@ builder.Services.AddPlatformModule();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+    await LegacyDatabaseBootstrap.EnsureDevSchemaAsync(app.Services);
+
 if (app.Environment.IsDevelopment())
 {
-    await LegacyDatabaseBootstrap.EnsureDevSchemaAsync(app.Services);
     app.UseSwagger();
     app.UseSwaggerUI();
 }
