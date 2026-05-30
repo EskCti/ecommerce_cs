@@ -93,6 +93,30 @@ export class StockHttpRepository implements IStockRepository {
     }
   }
 
+  async listMovements(params?: {
+    productId?: string
+    page?: number
+    pageSize?: number
+  }): Promise<Result<{ items: StockMovement[]; total: number }>> {
+    const q = new URLSearchParams()
+    if (params?.productId) q.set('productId', params.productId)
+    q.set('page', String(params?.page ?? 1))
+    q.set('pageSize', String(params?.pageSize ?? 50))
+    try {
+      const res = await fetch(`/api/catalog/stock/movements?${q}`, { headers: this.headers() })
+      if (!res.ok) return err(await parseApiError(res, 'Falha ao listar movimentações'))
+      const body = (await res.json()) as Record<string, unknown>
+      const rows = (body.items ?? body) as StockMovementDto[]
+      const items = Array.isArray(rows) ? rows.map(mapMovement) : []
+      return ok({
+        items,
+        total: Number(body.total ?? items.length),
+      })
+    } catch {
+      return err('Erro de rede')
+    }
+  }
+
   async listLowStock(): Promise<Result<LowStockProduct[]>> {
     try {
       const res = await fetch('/api/catalog/stock/low', { headers: this.headers() })

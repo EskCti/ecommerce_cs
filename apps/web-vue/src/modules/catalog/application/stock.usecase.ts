@@ -34,3 +34,10 @@ export class ListLowStockUseCase {
     return this.repository.listLowStock()
   }
 }
+
+export class ListStockMovementsUseCase {
+  constructor(private readonly repository: IStockRepository) {}
+  execute(params?: { productId?: string; page?: number; pageSize?: number }) {
+    return this.repository.listMovements(params)
+  }
+}

@@ -14,6 +14,7 @@ import {
 } from './application/product.usecase'
 import {
   ListLowStockUseCase,
+  ListStockMovementsUseCase,
   PurchaseStockUseCase,
   RecordStockEntryUseCase,
   RecordStockExitUseCase,
@@ -49,6 +50,7 @@ export function createCatalogModule(getToken: () => string | null) {
     recordStockExitUseCase: new RecordStockExitUseCase(stockRepository),
     purchaseStockUseCase: new PurchaseStockUseCase(stockRepository),
     listLowStockUseCase: new ListLowStockUseCase(stockRepository),
+    listStockMovementsUseCase: new ListStockMovementsUseCase(stockRepository),
     listGradesUseCase: new ListGradesUseCase(gradeRepository),
     configureGradeUseCase: new ConfigureGradeUseCase(gradeRepository),
     adjustVariantStockUseCase: new AdjustVariantStockUseCase(gradeRepository),
