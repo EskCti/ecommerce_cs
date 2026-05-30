@@ -33,6 +33,8 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyStockEntryRow> StockEntries => Set<LegacyStockEntryRow>();
     public DbSet<LegacyStockExitRow> StockExits => Set<LegacyStockExitRow>();
     public DbSet<LegacyGradeMovementDetailRow> GradeMovementDetails => Set<LegacyGradeMovementDetailRow>();
+    public DbSet<LegacyPayableRow> Payables => Set<LegacyPayableRow>();
+    public DbSet<LegacyCommissionRow> Commissions => Set<LegacyCommissionRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -165,6 +167,7 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
             entity.Property(e => e.CompanyId).HasColumnName("empresa");
             entity.Property(e => e.Type).HasColumnName("tipo").HasMaxLength(20);
+            entity.Property(e => e.Description).HasColumnName("descricao").HasMaxLength(100);
             entity.Property(e => e.PersonId).HasColumnName("pessoa");
             entity.Property(e => e.Amount).HasColumnName("valor");
             entity.Property(e => e.DueDate).HasColumnName("data_venc");
@@ -349,6 +352,40 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.OptionLegacyId).HasColumnName("id_item_grade");
             entity.Property(e => e.OptionLegacyId2).HasColumnName("id_item_grade_2");
             entity.Property(e => e.Quantity).HasColumnName("quantidade");
+        });
+
+        modelBuilder.Entity<LegacyPayableRow>(entity =>
+        {
+            entity.ToTable("pagar");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.Type).HasColumnName("tipo").HasMaxLength(30);
+            entity.Property(e => e.Description).HasColumnName("descricao").HasMaxLength(255);
+            entity.Property(e => e.PersonId).HasColumnName("pessoa");
+            entity.Property(e => e.Amount).HasColumnName("valor");
+            entity.Property(e => e.DueDate).HasColumnName("data_venc");
+            entity.Property(e => e.Paid).HasColumnName("pago").HasMaxLength(3);
+            entity.Property(e => e.FrequencyDays).HasColumnName("frequencia_dias");
+            entity.Property(e => e.ReferenceId).HasColumnName("id_ref");
+            entity.Property(e => e.SettledAt).HasColumnName("data_pgto");
+            entity.Property(e => e.CreatedAt).HasColumnName("data_lanc");
+        });
+
+        modelBuilder.Entity<LegacyCommissionRow>(entity =>
+        {
+            entity.ToTable("comissoes");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.Description).HasColumnName("descricao").HasMaxLength(50);
+            entity.Property(e => e.Amount).HasColumnName("valor");
+            entity.Property(e => e.SellerLegacyId).HasColumnName("vendedor");
+            entity.Property(e => e.SaleLegacyId).HasColumnName("id_ref");
+            entity.Property(e => e.Paid).HasColumnName("pago").HasMaxLength(3);
+            entity.Property(e => e.CreatedAt).HasColumnName("data_lanc");
+            entity.Property(e => e.PaidAt).HasColumnName("data_pgto");
+            entity.Property(e => e.PaymentPayableLegacyId).HasColumnName("pagar_id");
         });
 
         base.OnModelCreating(modelBuilder);
