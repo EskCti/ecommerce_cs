@@ -179,6 +179,7 @@ public sealed class LegacyReceivableRow
     public int Id { get; set; }
     public int CompanyId { get; set; }
     public string Type { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public int PersonId { get; set; }
     public decimal Amount { get; set; }
     public DateTime DueDate { get; set; }
@@ -267,4 +268,34 @@ public sealed class LegacyAttachmentRow
     public string? Nome { get; set; }
     public string? Foto { get; set; }
     public DateTime? DataValidade { get; set; }
+}
+
+public sealed class LegacyPayableRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string Type { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int PersonId { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime DueDate { get; set; }
+    public string Paid { get; set; } = "Não";
+    public int? FrequencyDays { get; set; }
+    public int? ReferenceId { get; set; }
+    public DateTime? SettledAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public sealed class LegacyCommissionRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public int SellerLegacyId { get; set; }
+    public int SaleLegacyId { get; set; }
+    public string Paid { get; set; } = "Não";
+    public DateTime CreatedAt { get; set; }
+    public DateTime? PaidAt { get; set; }
+    public int? PaymentPayableLegacyId { get; set; }
 }

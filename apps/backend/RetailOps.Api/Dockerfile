@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS builder
 WORKDIR /app
 
 COPY apps/backend/RetailOps.Api/RetailOps.Api.csproj ./apps/backend/RetailOps.Api/
@@ -15,10 +15,11 @@ RUN dotnet restore apps/backend/RetailOps.Api/RetailOps.Api.csproj
 COPY . .
 RUN dotnet publish apps/backend/RetailOps.Api/RetailOps.Api.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runner
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS runner
 WORKDIR /app
 
-RUN adduser -u 1001 --disabled-password --gecos "" appuser
+RUN groupadd --gid 1001 appuser \
+    && useradd --uid 1001 --gid 1001 --create-home appuser
 USER appuser
 
 COPY --from=builder /app/publish .

@@ -23,4 +23,5 @@ public interface IStockMovementRepository
 {
     Task<Result> Save(StockMovement movement);
     Task<Result<IReadOnlyList<StockMovement>>> GetByProductId(Guid productId);
+    Task<Result<IReadOnlyList<StockMovement>>> GetByTenantId(TenantId tenantId, int page, int pageSize);
 }

@@ -15,6 +15,8 @@ public sealed record PurchaseStockInputDto
     public required decimal UnitCost { get; init; }
     public required string Reason { get; init; }
     public required int UserId { get; init; }
+    public DateTime? DueDate { get; init; }
+    public int? SupplierLegacyId { get; init; }
 }
 
 public sealed record StockMovementOutputDto

@@ -51,14 +51,17 @@ builder.Services.AddStoreSettingsModule();
 builder.Services.AddCrmModule();
 builder.Services.AddCatalogModule();
 builder.Services.AddSalesModule();
+builder.Services.AddFinanceModule();
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddPlatformModule();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+    await LegacyDatabaseBootstrap.EnsureDevSchemaAsync(app.Services);
+
 if (app.Environment.IsDevelopment())
 {
-    await LegacyDatabaseBootstrap.EnsureDevSchemaAsync(app.Services);
     app.UseSwagger();
     app.UseSwaggerUI();
 }

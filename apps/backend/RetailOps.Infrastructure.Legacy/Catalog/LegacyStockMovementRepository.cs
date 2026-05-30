@@ -40,4 +40,15 @@ public sealed class LegacyStockMovementRepository(
             ? Result<IReadOnlyList<StockMovement>>.Failure(result.Error)
             : Result<IReadOnlyList<StockMovement>>.Success(result.Value);
     }
+
+    public async Task<Result<IReadOnlyList<StockMovement>>> GetByTenantId(
+        TenantId tenantId,
+        int page,
+        int pageSize)
+    {
+        var result = await legacyPort.GetStockMovementsByTenantFromLegacyAsync(tenantId, page, pageSize);
+        return result.IsFailure
+            ? Result<IReadOnlyList<StockMovement>>.Failure(result.Error)
+            : Result<IReadOnlyList<StockMovement>>.Success(result.Value);
+    }
 }

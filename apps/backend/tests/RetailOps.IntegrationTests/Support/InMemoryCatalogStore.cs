@@ -136,6 +136,18 @@ internal sealed class InMemoryStockMovementRepository(CatalogTestState state) : 
 
         return Task.FromResult(Result<IReadOnlyList<StockMovement>>.Success(items));
     }
+
+    public Task<Result<IReadOnlyList<StockMovement>>> GetByTenantId(TenantId tenantId, int page, int pageSize)
+    {
+        var skip = Math.Max(0, page - 1) * pageSize;
+        var items = state.StockMovements.Values
+            .OrderByDescending(m => m.CreatedAt)
+            .Skip(skip)
+            .Take(pageSize)
+            .ToList();
+
+        return Task.FromResult(Result<IReadOnlyList<StockMovement>>.Success(items));
+    }
 }
 
 internal sealed class InMemoryCatalogLegacyPort(CatalogTestState state) : ICatalogLegacyPort
@@ -189,6 +201,21 @@ internal sealed class InMemoryCatalogLegacyPort(CatalogTestState state) : ICatal
     public Task<Result<IReadOnlyList<StockMovement>>> GetStockMovementsFromLegacyAsync(Guid productId, CancellationToken ct = default)
     {
         var items = state.StockMovements.Values.Where(m => m.ProductId == productId).ToList();
+        return Task.FromResult(Result<IReadOnlyList<StockMovement>>.Success(items));
+    }
+
+    public Task<Result<IReadOnlyList<StockMovement>>> GetStockMovementsByTenantFromLegacyAsync(
+        TenantId tenantId,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        var skip = Math.Max(0, page - 1) * pageSize;
+        var items = state.StockMovements.Values
+            .OrderByDescending(m => m.CreatedAt)
+            .Skip(skip)
+            .Take(pageSize)
+            .ToList();
         return Task.FromResult(Result<IReadOnlyList<StockMovement>>.Success(items));
     }
 }

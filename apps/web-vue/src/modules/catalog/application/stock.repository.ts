@@ -37,5 +37,6 @@ export interface IStockRepository {
   recordEntry(input: StockMovementInput): Promise<Result<StockMovement>>
   recordExit(input: StockMovementInput): Promise<Result<StockMovement>>
   purchaseStock(input: PurchaseStockInput): Promise<Result<StockMovement>>
+  listMovements(params?: { productId?: string; page?: number; pageSize?: number }): Promise<Result<{ items: StockMovement[]; total: number }>>
   listLowStock(): Promise<Result<LowStockProduct[]>>
 }
