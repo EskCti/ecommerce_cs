@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import SidebarMenu from '@/components/SidebarMenu.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import { useShell } from '@/composables/useShell'
+import { useAuthStore } from '@/stores/auth'
 import {
   DEFAULT_SHELL_MAIN_ITEM,
   DEFAULT_SHELL_SECTIONS,
@@ -10,7 +12,7 @@ import {
   type SidebarMenuSection,
 } from '@/config/shell-navigation'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     appName?: string
     userName?: string
@@ -27,7 +29,42 @@ withDefaults(
   },
 )
 
+const auth = useAuthStore()
 const { sidebarOpen, mobileSidebarOpen, toggleSidebar, closeMobileSidebar } = useShell()
+
+const routePermissions: Record<string, string | string[]> = {
+  '/tenant/settings/store': 'configuracoes',
+  '/tenant/settings/payment-methods': 'configuracoes',
+  '/tenant/settings/cash-registers': 'configuracoes',
+  '/tenant/crm/customers': 'clientes',
+  '/tenant/crm/suppliers': 'fornecedores',
+  '/tenant/catalog/products': 'produtos',
+  '/tenant/catalog/categories': 'categorias',
+  '/tenant/catalog/inventory/low-stock': 'produtos',
+  '/tenant/catalog/stock/movements': 'produtos',
+  '/tenant/pdv': 'vendas',
+  '/tenant/sales': ['vendas', 'produtos'],
+  '/tenant/finance/receivables': 'receber',
+  '/tenant/finance/payables': 'pagar',
+  '/tenant/finance/purchases': 'pagar',
+  '/tenant/finance/commissions': ['comissoes', 'caixa'],
+}
+
+function canAccessRoute(path: string): boolean {
+  const permission = routePermissions[path]
+  if (!permission) return true
+  if (Array.isArray(permission)) return permission.some((key) => auth.hasPermission(key))
+  return auth.hasPermission(permission)
+}
+
+const visibleSections = computed(() =>
+  props.sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => canAccessRoute(item.to)),
+    }))
+    .filter((section) => section.items.length > 0),
+)
 </script>
 
 <template>
@@ -47,7 +84,7 @@ const { sidebarOpen, mobileSidebarOpen, toggleSidebar, closeMobileSidebar } = us
           </RouterLink>
         </div>
         <div class="flex-1 overflow-y-auto">
-          <SidebarMenu :main-item="mainItem" :sections="sections" :collapsed="!sidebarOpen" />
+          <SidebarMenu :main-item="mainItem" :sections="visibleSections" :collapsed="!sidebarOpen" />
         </div>
       </aside>
 
@@ -63,7 +100,7 @@ const { sidebarOpen, mobileSidebarOpen, toggleSidebar, closeMobileSidebar } = us
           </RouterLink>
         </div>
         <div class="flex-1 overflow-y-auto">
-          <SidebarMenu :main-item="mainItem" :sections="sections" @navigate="closeMobileSidebar" />
+          <SidebarMenu :main-item="mainItem" :sections="visibleSections" @navigate="closeMobileSidebar" />
         </div>
       </aside>
 

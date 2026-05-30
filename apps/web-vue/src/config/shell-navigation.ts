@@ -97,6 +97,30 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
         to: '/tenant/sales',
         match: 'prefix',
       },
+      {
+        id: 'tenant-finance-receivables',
+        label: 'Contas a receber',
+        to: '/tenant/finance/receivables',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-finance-payables',
+        label: 'Despesas',
+        to: '/tenant/finance/payables',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-finance-purchases',
+        label: 'Compras',
+        to: '/tenant/finance/purchases',
+        match: 'prefix',
+      },
+      {
+        id: 'tenant-finance-commissions',
+        label: 'Comissões / Fluxo',
+        to: '/tenant/finance/commissions',
+        match: 'prefix',
+      },
     ],
   },
 ]

@@ -116,6 +116,36 @@ const router = createRouter({
           component: () => import('@/views/SalesListView.vue'),
           meta: { permissions: ['vendas', 'produtos'] },
         },
+        {
+          path: 'finance/receivables',
+          name: 'tenant-finance-receivables',
+          component: () => import('@/views/FinanceReceivablesView.vue'),
+          meta: { permission: 'receber' },
+        },
+        {
+          path: 'finance/payables',
+          name: 'tenant-finance-payables',
+          component: () => import('@/views/FinancePayablesView.vue'),
+          meta: { permission: 'pagar' },
+        },
+        {
+          path: 'finance/purchases',
+          name: 'tenant-finance-purchases',
+          component: () => import('@/views/FinancePurchasesView.vue'),
+          meta: { permission: 'pagar' },
+        },
+        {
+          path: 'finance/commissions',
+          name: 'tenant-finance-commissions',
+          component: () => import('@/views/FinanceCommissionsView.vue'),
+          meta: { permissions: ['comissoes', 'caixa'] },
+        },
+        {
+          path: 'finance/cash-flow',
+          name: 'tenant-finance-cash-flow',
+          component: () => import('@/views/FinanceCommissionsView.vue'),
+          meta: { permission: 'caixa' },
+        },
       ],
     },
   ],
@@ -137,11 +167,13 @@ router.beforeEach(async (to) => {
   if (to.meta.sasOnly && !auth.isSas) return '/tenant'
 
   const permission = to.meta.permission as string | undefined
-  if (permission && !auth.hasPermission(permission)) return '/tenant'
+  if (permission && !auth.hasPermission(permission)) {
+    return { path: '/tenant', query: { denied: permission } }
+  }
 
   const permissions = to.meta.permissions as string[] | undefined
   if (permissions?.length && !permissions.some((key) => auth.hasPermission(key))) {
-    return '/tenant'
+    return { path: '/tenant', query: { denied: permissions.join(',') } }
   }
 
   return true
