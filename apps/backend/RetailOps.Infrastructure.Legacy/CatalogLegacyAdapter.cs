@@ -373,6 +373,58 @@ public sealed class CatalogLegacyAdapter(
         }
     }
 
+    public async Task<Result<IReadOnlyList<StockMovement>>> GetStockMovementsByTenantFromLegacyAsync(
+        TenantId tenantId,
+        int page,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var skip = Math.Max(0, page - 1) * pageSize;
+            var movements = new List<StockMovement>();
+
+            var entries = await db.StockEntries.AsNoTracking()
+                .Where(e => e.CompanyId == tenantId.Value)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync(ct);
+
+            foreach (var entry in entries)
+            {
+                var productId = LegacyCatalogIds.Product(entry.ProductLegacyId);
+                var mapped = LegacyStockMovementMapper.ToDomain(entry, productId);
+                if (mapped.IsSuccess)
+                    movements.Add(mapped.Value);
+            }
+
+            var exits = await db.StockExits.AsNoTracking()
+                .Where(e => e.CompanyId == tenantId.Value)
+                .OrderByDescending(e => e.CreatedAt)
+                .ToListAsync(ct);
+
+            foreach (var exit in exits)
+            {
+                var productId = LegacyCatalogIds.Product(exit.ProductLegacyId);
+                var mapped = LegacyStockMovementMapper.ToDomain(exit, productId);
+                if (mapped.IsSuccess)
+                    movements.Add(mapped.Value);
+            }
+
+            var pageItems = movements
+                .OrderByDescending(m => m.CreatedAt)
+                .Skip(skip)
+                .Take(pageSize)
+                .ToList();
+
+            return Result<IReadOnlyList<StockMovement>>.Success(pageItems);
+        }
+        catch (Exception ex)
+        {
+            return Result<IReadOnlyList<StockMovement>>.Failure(
+                $"Failed to list Stock movements from legacy: {ex.Message}");
+        }
+    }
+
     private async Task<IReadOnlyList<GradeDimension>> LoadGradeDimensionsAsync(
         TenantId tenantId,
         int productLegacyId,

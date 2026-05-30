@@ -22,17 +22,24 @@ public sealed class CatalogStockController(
     private int TenantId => tenantContext.TenantId.Value;
 
     [HttpGet("movements")]
-    public async Task<IActionResult> ListMovements([FromQuery] Guid productId, CancellationToken ct)
+    public async Task<IActionResult> ListMovements(
+        [FromQuery] Guid? productId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken ct = default)
     {
         if (!tenantContext.HasTenant)
             return Forbid();
 
-        var result = await stockMovementRepository.GetByProductId(productId);
+        var result = productId is Guid selectedProductId
+            ? await stockMovementRepository.GetByProductId(selectedProductId)
+            : await stockMovementRepository.GetByTenantId(tenantContext.TenantId, page, pageSize);
+
         if (result.IsFailure)
             return BadRequest(new { error = result.Error });
 
         var projected = result.Value.Select(StockMovementOutputDto.FromDomain).ToList();
-        return Ok(projected);
+        return Ok(new { items = projected, total = projected.Count, page, pageSize });
     }
 
     [HttpPost("movements")]

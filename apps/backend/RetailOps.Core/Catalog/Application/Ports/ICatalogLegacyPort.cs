@@ -18,6 +18,11 @@ public interface ICatalogLegacyPort
 
     Task<Result<int>> SaveStockMovementToLegacyAsync(StockMovement movement, TenantId tenantId, CancellationToken ct = default);
     Task<Result<IReadOnlyList<StockMovement>>> GetStockMovementsFromLegacyAsync(Guid productId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<StockMovement>>> GetStockMovementsByTenantFromLegacyAsync(
+        TenantId tenantId,
+        int page,
+        int pageSize,
+        CancellationToken ct = default);
 }
 
 public interface IStockLegacyPort
