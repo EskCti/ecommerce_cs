@@ -1,3 +1,4 @@
+using RetailOps.Core.Finance.Application.Ports;
 using RetailOps.Core.Sales.Application.DTOs;
 using RetailOps.Core.Sales.Application.Events;
 using RetailOps.Core.Sales.Application.Ports;
@@ -11,6 +12,7 @@ namespace RetailOps.Core.Sales.Application.UseCases;
 public sealed class CancelSaleUseCase(
     ISaleRepository saleRepository,
     ISalesLegacyPort salesLegacyPort,
+    IFinanceCancellationPort financeCancellationPort,
     CartStockReservationService stockReservation) : IUseCase<(int tenantId, Guid saleId), SaleOutputDto>
 {
     public async Task<Result<SaleOutputDto>> Execute(
@@ -42,6 +44,14 @@ public sealed class CancelSaleUseCase(
         var legacyCancel = await salesLegacyPort.CancelSale(sale, cancellationToken);
         if (legacyCancel.IsFailure)
             return Result<SaleOutputDto>.Failure(legacyCancel.Error);
+
+        var financeCancel = await financeCancellationPort.RemoveBySaleIdAsync(
+            tenantIdResult.Value,
+            sale.Id,
+            cancellationToken);
+
+        if (financeCancel.IsFailure)
+            return Result<SaleOutputDto>.Failure(financeCancel.Error);
 
         var saveResult = await saleRepository.Save(sale);
         if (saveResult.IsFailure)

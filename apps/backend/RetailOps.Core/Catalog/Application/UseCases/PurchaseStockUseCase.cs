@@ -83,14 +83,25 @@ public sealed class PurchaseStockUseCase(
         if (saveMovement.IsFailure)
             return Result<StockMovementOutputDto>.Failure(saveMovement.Error);
 
-        await productPurchasedPublisher.PublishAsync(
-            new ProductPurchased(
-                product.Id,
-                tenantId,
-                input.Quantity,
-                input.UnitCost,
-                DateTime.UtcNow),
-            cancellationToken);
+        try
+        {
+            await productPurchasedPublisher.PublishAsync(
+                new ProductPurchased(
+                    product.Id,
+                    tenantId,
+                    input.Quantity,
+                    input.UnitCost,
+                    DateTime.UtcNow,
+                    input.DueDate ?? DateTime.UtcNow,
+                    product.Name.Value,
+                    input.Reason.Trim(),
+                    input.SupplierLegacyId),
+                cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<StockMovementOutputDto>.Failure(ex.Message);
+        }
 
         return Result<StockMovementOutputDto>.Success(StockMovementOutputDto.FromDomain(movementResult.Value));
     }

@@ -5,7 +5,11 @@ public sealed record ProductPurchased(
     int TenantId,
     int Quantity,
     decimal UnitCost,
-    DateTime PurchasedAt);
+    DateTime PurchasedAt,
+    DateTime DueDate,
+    string ProductName,
+    string Reason,
+    int? SupplierLegacyId = null);
 
 public interface IProductPurchasedPublisher
 {
