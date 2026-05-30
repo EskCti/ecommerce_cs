@@ -51,6 +51,7 @@ builder.Services.AddStoreSettingsModule();
 builder.Services.AddCrmModule();
 builder.Services.AddCatalogModule();
 builder.Services.AddSalesModule();
+builder.Services.AddFinanceModule();
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddPlatformModule();
 
