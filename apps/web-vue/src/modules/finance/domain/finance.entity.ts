@@ -18,17 +18,17 @@ export type ReceivableData = {
 }
 
 export class ReceivableEntity implements ReceivableData {
-  readonly id: string
-  readonly description: string
-  readonly amount: number
-  readonly currency: string
-  readonly dueDate: string
-  readonly status: PaymentStatus
+  readonly id!: string
+  readonly description!: string
+  readonly amount!: number
+  readonly currency!: string
+  readonly dueDate!: string
+  readonly status!: PaymentStatus
   readonly settledAt?: string
   readonly saleId?: string
   readonly personLegacyId?: number
-  readonly createdAt: string
-  readonly updatedAt: string
+  readonly createdAt!: string
+  readonly updatedAt!: string
 
   private constructor(data: ReceivableData) {
     Object.assign(this, data)
