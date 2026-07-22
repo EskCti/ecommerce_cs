@@ -299,3 +299,14 @@ public sealed class LegacyCommissionRow
     public DateTime? PaidAt { get; set; }
     public int? PaymentPayableLegacyId { get; set; }
 }
+
+public sealed class LegacyExchangeRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public int CustomerLegacyId { get; set; }
+    public int ProductInLegacyId { get; set; }
+    public int ProductOutLegacyId { get; set; }
+    public int UserLegacyId { get; set; }
+    public DateTime ExchangeDate { get; set; }
+}
