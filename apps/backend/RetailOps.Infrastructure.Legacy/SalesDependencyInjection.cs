@@ -19,7 +19,6 @@ public static class SalesDependencyInjection
         services.AddScoped<CartStockReservationService>();
 
         services.AddScoped<IManagerPinVerifier, ManagerPinVerifierStub>();
-        services.AddScoped<ISaleParallelRunLogger, SaleParallelRunLogger>();
         services.AddScoped<ISaleCompletedPublisher, SaleCompletedPublisherStub>();
 
         services.AddScoped<OpenCashSessionUseCase>();

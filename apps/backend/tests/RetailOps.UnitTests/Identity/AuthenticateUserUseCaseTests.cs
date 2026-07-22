@@ -23,7 +23,6 @@ public class AuthenticateUserUseCaseTests
 
         var sut = new AuthenticateUserUseCase(
             users.Object,
-            Mock.Of<ILegacyMd5PasswordVerifier>(),
             Mock.Of<IPasswordHasher>(),
             Mock.Of<IJwtTokenService>());
 
@@ -52,7 +51,6 @@ public class AuthenticateUserUseCaseTests
 
         var sut = new AuthenticateUserUseCase(
             users.Object,
-            Mock.Of<ILegacyMd5PasswordVerifier>(),
             Mock.Of<IPasswordHasher>(),
             Mock.Of<IJwtTokenService>());
 
@@ -82,7 +80,6 @@ public class AuthenticateUserUseCaseTests
 
         var sut = new AuthenticateUserUseCase(
             users.Object,
-            Mock.Of<ILegacyMd5PasswordVerifier>(),
             Mock.Of<IPasswordHasher>(),
             Mock.Of<IJwtTokenService>());
 
@@ -92,7 +89,7 @@ public class AuthenticateUserUseCaseTests
     }
 
     [Fact]
-    public async Task Execute_RehashesLegacyMd5_AndSavesUser()
+    public async Task Execute_ReturnsResetRequired_WhenPasswordIsLegacyMd5()
     {
         const string md5Hash = "5ebe2294ecd0e0f08eab7690d2a6ee69";
         var user = User.Reconstitute(
@@ -110,24 +107,15 @@ public class AuthenticateUserUseCaseTests
 
         var users = new Mock<IUserRepository>();
         users.Setup(r => r.FindByEmailOrCpfAsync("legacy@test.com", default)).ReturnsAsync(user);
-        users.Setup(r => r.SaveAsync(user, default)).ReturnsAsync(Result.Success());
-
-        var legacy = new Mock<ILegacyMd5PasswordVerifier>();
-        legacy.Setup(l => l.Verify("secret", md5Hash)).Returns(true);
 
         var hasher = new Mock<IPasswordHasher>();
         hasher.Setup(h => h.IsBcryptHash(md5Hash)).Returns(false);
-        hasher.Setup(h => h.Hash("secret")).Returns("$2a$11$newbcrypt");
 
-        var jwt = new Mock<IJwtTokenService>();
-        jwt.Setup(j => j.CreateToken(user)).Returns(("token", DateTime.UtcNow.AddHours(1)));
-
-        var sut = new AuthenticateUserUseCase(users.Object, legacy.Object, hasher.Object, jwt.Object);
+        var sut = new AuthenticateUserUseCase(users.Object, hasher.Object, Mock.Of<IJwtTokenService>());
         var result = await sut.Execute(new AuthenticateUserInDto("legacy@test.com", "secret"));
 
-        Assert.True(result.IsSuccess);
-        users.Verify(r => r.SaveAsync(user, default), Times.Once);
-        hasher.Verify(h => h.Hash("secret"), Times.Once);
+        Assert.True(result.IsFailure);
+        Assert.Equal(AuthErrors.LegacyPasswordResetRequired, result.Error);
     }
 
     [Fact]
@@ -156,7 +144,7 @@ public class AuthenticateUserUseCaseTests
         var jwt = new Mock<IJwtTokenService>();
         jwt.Setup(j => j.CreateToken(user)).Returns(("token", DateTime.UtcNow.AddHours(1)));
 
-        var sut = new AuthenticateUserUseCase(users.Object, Mock.Of<ILegacyMd5PasswordVerifier>(), hasher.Object, jwt.Object);
+        var sut = new AuthenticateUserUseCase(users.Object, hasher.Object, jwt.Object);
         var result = await sut.Execute(new AuthenticateUserInDto("admin@test.com", "secret"));
 
         Assert.True(result.IsSuccess);

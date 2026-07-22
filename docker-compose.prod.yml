@@ -25,6 +25,9 @@ services:
       Jwt__Secret: ${Jwt__Secret:?Jwt__Secret is required}
       Jwt__Issuer: ${Jwt__Issuer:-SasVendas}
       Jwt__Audience: ${Jwt__Audience:-SasVendas.Users}
+      Migration__LegacyPhpEnabled: "false"
+      Migration__AllTenantsOnRetailOps: "true"
+      Migration__DualWriteEnabled: "false"
     depends_on:
       postgres:
         condition: service_healthy

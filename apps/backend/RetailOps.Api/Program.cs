@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using RetailOps.Api.Middleware;
 using RetailOps.Identity.Infrastructure;
 using RetailOps.Infrastructure;
+using RetailOps.Infrastructure.Cutover;
 using RetailOps.Infrastructure.Legacy;
 using RetailOps.Infrastructure.Legacy.Persistence;
 using RetailOps.Platform.Infrastructure;
@@ -46,11 +47,14 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddCutoverModule();
 builder.Services.AddLegacyInfrastructure(builder.Configuration);
+builder.Services.AddCutoverLegacyServices();
 builder.Services.AddStoreSettingsModule();
 builder.Services.AddCrmModule();
 builder.Services.AddCatalogModule();
 builder.Services.AddSalesModule();
+builder.Services.AddSalesParallelRunLogging(builder.Configuration);
 builder.Services.AddFinanceModule();
 builder.Services.AddReturnsModule();
 builder.Services.AddReportingModule();
@@ -63,7 +67,10 @@ builder.Services.AddPlatformModule();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+{
     await LegacyDatabaseBootstrap.EnsureDevSchemaAsync(app.Services);
+    await CutoverDatabaseBootstrap.EnsureSchemaAsync(app.Services);
+}
 
 if (app.Environment.IsDevelopment())
 {
