@@ -54,6 +54,9 @@ builder.Services.AddSalesModule();
 builder.Services.AddFinanceModule();
 builder.Services.AddReturnsModule();
 builder.Services.AddReportingModule();
+builder.Services.AddNotificationsModule(builder.Configuration);
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddNotificationsHostedService();
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddPlatformModule();
 
