@@ -104,6 +104,12 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
         match: 'prefix',
       },
       {
+        id: 'tenant-reports',
+        label: 'Relatórios',
+        to: '/tenant/reports',
+        match: 'prefix',
+      },
+      {
         id: 'tenant-finance-receivables',
         label: 'Contas a receber',
         to: '/tenant/finance/receivables',

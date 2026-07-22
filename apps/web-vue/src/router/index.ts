@@ -123,6 +123,12 @@ const router = createRouter({
           meta: { permission: 'devolucoes' },
         },
         {
+          path: 'reports',
+          name: 'tenant-reports',
+          component: () => import('@/views/ReportsView.vue'),
+          meta: { permissions: ['rel_vendas', 'rel_estoque', 'rel_financeiro', 'rel_caixa'] },
+        },
+        {
           path: 'finance/receivables',
           name: 'tenant-finance-receivables',
           component: () => import('@/views/FinanceReceivablesView.vue'),
