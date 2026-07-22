@@ -46,3 +46,36 @@ The system SHALL persist report format (PDF/HTML), report logo path, and WhatsAp
 
 - **WHEN** administrator sets report format to PDF and logo path
 - **THEN** report settings are persisted for tenant
+
+### Requirement: Store report format configuration
+
+The system SHALL persist tenant report output format as PDF or HTML via ReportFormat value object. Reporting module SHALL read ReportFormat when rendering tenant reports and set HTTP content type accordingly.
+
+#### Scenario: PDF format configured
+
+- **WHEN** tenant ReportFormat is PDF and user exports any tenant report
+- **THEN** response Content-Type is application/pdf
+
+#### Scenario: HTML format configured
+
+- **WHEN** tenant ReportFormat is HTML and user exports any tenant report
+- **THEN** response Content-Type is text/html
+
+### Requirement: WhatsApp credentials configuration
+
+Store configuration SHALL persist tenant WhatsApp API token and system phone number. Notifications digest SHALL resolve credentials with tenant token overriding global default token when tenant token is non-empty per RN-071.
+
+#### Scenario: Tenant token overrides global
+
+- **WHEN** tenant ApiToken is configured and global default token exists
+- **THEN** digest uses tenant ApiToken for WhatsApp gateway
+
+#### Scenario: Global token fallback
+
+- **WHEN** tenant ApiToken is empty and global default token is configured
+- **THEN** digest uses global default token
+
+#### Scenario: System phone destination
+
+- **WHEN** tenant system phone is configured
+- **THEN** digest sends WhatsApp message to that phone number

@@ -300,6 +300,14 @@ public sealed class LegacyCommissionRow
     public int? PaymentPayableLegacyId { get; set; }
 }
 
+public sealed class LegacyDailyDigestLogRow
+{
+    public int Id { get; set; }
+    public int CompanyId { get; set; }
+    public DateOnly DigestDate { get; set; }
+    public DateTime SentAt { get; set; }
+}
+
 public sealed class LegacyExchangeRow
 {
     public int Id { get; set; }
