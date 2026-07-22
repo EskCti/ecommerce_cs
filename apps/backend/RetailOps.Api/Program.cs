@@ -53,6 +53,7 @@ builder.Services.AddCatalogModule();
 builder.Services.AddSalesModule();
 builder.Services.AddFinanceModule();
 builder.Services.AddReturnsModule();
+builder.Services.AddReportingModule();
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddPlatformModule();
 

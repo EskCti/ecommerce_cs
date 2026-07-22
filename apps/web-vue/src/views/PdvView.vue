@@ -12,6 +12,8 @@ import Password from 'primevue/password'
 import Message from 'primevue/message'
 import { useAuthStore } from '@/stores/auth'
 import { createSalesModule } from '@/modules/sales/composition'
+import { createReportingModule } from '@/modules/reporting/composition'
+import { triggerBlobDownload } from '@/modules/reporting/application/reporting.usecase'
 import { createStoreSettingsModule } from '@/modules/store-settings/composition'
 import { createUsersModule } from '@/modules/users/composition'
 import { createCrmModule } from '@/modules/crm/composition'
@@ -30,6 +32,7 @@ const storeSettings = createStoreSettingsModule(() => auth.token)
 const usersModule = createUsersModule(() => auth.token)
 const crm = createCrmModule(() => auth.token)
 const catalog = createCatalogModule(() => auth.token)
+const reporting = createReportingModule(() => auth.token)
 
 const session = ref<CashSessionEntity | null>(null)
 const terminals = ref<CashRegisterTerminalEntity[]>([])
@@ -46,6 +49,8 @@ const checkoutDialogVisible = ref(false)
 const withdrawalDialogVisible = ref(false)
 const closeDialogVisible = ref(false)
 const gradeDialogVisible = ref(false)
+const receiptDialogVisible = ref(false)
+const lastSaleId = ref<string | null>(null)
 
 const openForm = ref({
   terminalId: null as string | null,
@@ -280,7 +285,9 @@ async function finalizeSale() {
       error.value = result.error
       return
     }
+    lastSaleId.value = result.data.id
     checkoutDialogVisible.value = false
+    receiptDialogVisible.value = true
     await loadSession()
     if (!session.value) openDialogVisible.value = true
   } finally {
@@ -417,6 +424,31 @@ async function confirmGrade() {
 
 function goToSalesList() {
   router.push('/tenant/sales')
+}
+
+async function printReceipt() {
+  if (!lastSaleId.value) return
+  error.value = ''
+  loading.value = true
+  try {
+    const result = await reporting.downloadReceiptUseCase.execute(lastSaleId.value)
+    if (!result.ok) {
+      error.value = result.error
+      return
+    }
+    triggerBlobDownload(result.data, `recibo-${lastSaleId.value}.pdf`)
+    receiptDialogVisible.value = false
+    lastSaleId.value = null
+  } finally {
+    loading.value = false
+    await focusScanner()
+  }
+}
+
+function closeReceiptDialog() {
+  receiptDialogVisible.value = false
+  lastSaleId.value = null
+  focusScanner()
 }
 
 function logout() {
@@ -706,6 +738,19 @@ onMounted(init)
       <template #footer>
         <Button label="Cancelar" text @click="closeDialogVisible = false" />
         <Button label="Fechar caixa" severity="warning" :loading="loading" @click="submitCloseSession" />
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="receiptDialogVisible"
+      header="Venda finalizada"
+      modal
+      class="w-full max-w-sm"
+    >
+      <p class="text-sm text-muted-foreground">Deseja imprimir o comprovante da venda?</p>
+      <template #footer>
+        <Button label="Depois" text @click="closeReceiptDialog" />
+        <Button label="Imprimir recibo" icon="pi pi-print" :loading="loading" @click="printReceipt" />
       </template>
     </Dialog>
 
