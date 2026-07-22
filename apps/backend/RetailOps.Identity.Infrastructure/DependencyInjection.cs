@@ -21,7 +21,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddIdentityModule(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<ILegacyMd5PasswordVerifier, LegacyMd5PasswordVerifier>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, LegacyUserRepository>();

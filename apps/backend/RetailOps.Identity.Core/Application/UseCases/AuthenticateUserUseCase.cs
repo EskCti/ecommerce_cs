@@ -8,7 +8,6 @@ namespace RetailOps.Identity.Core.Application.UseCases;
 
 public sealed class AuthenticateUserUseCase(
     IUserRepository users,
-    ILegacyMd5PasswordVerifier legacyMd5,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwt) : IUseCase<AuthenticateUserInDto, AuthTokenOutDto>
 {
@@ -25,19 +24,11 @@ public sealed class AuthenticateUserUseCase(
             return Result<AuthTokenOutDto>.Failure(AuthErrors.MissingPermissions);
 
         var hash = user.PasswordHash.Value;
-        var valid = passwordHasher.IsBcryptHash(hash)
-            ? passwordHasher.Verify(input.Password, hash)
-            : legacyMd5.Verify(input.Password, hash);
-
-        if (!valid)
-            return Result<AuthTokenOutDto>.Failure(AuthErrors.InvalidCredentials);
-
         if (!passwordHasher.IsBcryptHash(hash))
-        {
-            user.UpdatePasswordHash(
-                Domain.ValueObjects.PasswordHash.CreateBcrypt(passwordHasher.Hash(input.Password)).Value);
-            await users.SaveAsync(user);
-        }
+            return Result<AuthTokenOutDto>.Failure(AuthErrors.LegacyPasswordResetRequired);
+
+        if (!passwordHasher.Verify(input.Password, hash))
+            return Result<AuthTokenOutDto>.Failure(AuthErrors.InvalidCredentials);
 
         var (token, expires) = jwt.CreateToken(user);
         var keys = user.Grants.Select(g => g.PermissionKey.Value).ToList();
