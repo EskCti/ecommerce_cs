@@ -36,6 +36,7 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyPayableRow> Payables => Set<LegacyPayableRow>();
     public DbSet<LegacyCommissionRow> Commissions => Set<LegacyCommissionRow>();
     public DbSet<LegacyExchangeRow> Exchanges => Set<LegacyExchangeRow>();
+    public DbSet<LegacyDailyDigestLogRow> DailyDigestLogs => Set<LegacyDailyDigestLogRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -400,6 +401,17 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnName("data_lanc");
             entity.Property(e => e.PaidAt).HasColumnName("data_pgto");
             entity.Property(e => e.PaymentPayableLegacyId).HasColumnName("pagar_id");
+        });
+
+        modelBuilder.Entity<LegacyDailyDigestLogRow>(entity =>
+        {
+            entity.ToTable("daily_digest_logs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.DigestDate).HasColumnName("digest_date");
+            entity.Property(e => e.SentAt).HasColumnName("sent_at");
+            entity.HasIndex(e => new { e.CompanyId, e.DigestDate }).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);
