@@ -117,6 +117,12 @@ const router = createRouter({
           meta: { permissions: ['vendas', 'produtos'] },
         },
         {
+          path: 'returns/exchanges',
+          name: 'tenant-returns-exchanges',
+          component: () => import('@/views/ExchangesView.vue'),
+          meta: { permission: 'devolucoes' },
+        },
+        {
           path: 'finance/receivables',
           name: 'tenant-finance-receivables',
           component: () => import('@/views/FinanceReceivablesView.vue'),

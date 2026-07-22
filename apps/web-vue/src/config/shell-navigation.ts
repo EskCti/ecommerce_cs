@@ -98,6 +98,12 @@ export const DEFAULT_SHELL_SECTIONS: SidebarMenuSection[] = [
         match: 'prefix',
       },
       {
+        id: 'tenant-returns-exchanges',
+        label: 'Trocas',
+        to: '/tenant/returns/exchanges',
+        match: 'prefix',
+      },
+      {
         id: 'tenant-finance-receivables',
         label: 'Contas a receber',
         to: '/tenant/finance/receivables',
