@@ -35,6 +35,7 @@ public sealed class LegacySasDbContext : DbContext
     public DbSet<LegacyGradeMovementDetailRow> GradeMovementDetails => Set<LegacyGradeMovementDetailRow>();
     public DbSet<LegacyPayableRow> Payables => Set<LegacyPayableRow>();
     public DbSet<LegacyCommissionRow> Commissions => Set<LegacyCommissionRow>();
+    public DbSet<LegacyExchangeRow> Exchanges => Set<LegacyExchangeRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -352,6 +353,19 @@ public sealed class LegacySasDbContext : DbContext
             entity.Property(e => e.OptionLegacyId).HasColumnName("id_item_grade");
             entity.Property(e => e.OptionLegacyId2).HasColumnName("id_item_grade_2");
             entity.Property(e => e.Quantity).HasColumnName("quantidade");
+        });
+
+        modelBuilder.Entity<LegacyExchangeRow>(entity =>
+        {
+            entity.ToTable("trocas");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(e => e.CompanyId).HasColumnName("empresa");
+            entity.Property(e => e.CustomerLegacyId).HasColumnName("cliente");
+            entity.Property(e => e.ProductInLegacyId).HasColumnName("produto_entrada");
+            entity.Property(e => e.ProductOutLegacyId).HasColumnName("produto_saida");
+            entity.Property(e => e.UserLegacyId).HasColumnName("usuario");
+            entity.Property(e => e.ExchangeDate).HasColumnName("data");
         });
 
         modelBuilder.Entity<LegacyPayableRow>(entity =>

@@ -44,6 +44,7 @@ const routePermissions: Record<string, string | string[]> = {
   '/tenant/catalog/stock/movements': 'produtos',
   '/tenant/pdv': 'vendas',
   '/tenant/sales': ['vendas', 'produtos'],
+  '/tenant/returns/exchanges': 'devolucoes',
   '/tenant/finance/receivables': 'receber',
   '/tenant/finance/payables': 'pagar',
   '/tenant/finance/purchases': 'pagar',
